@@ -319,8 +319,8 @@ class _FloatingNavBar extends StatelessWidget {
                       ),
                     ],
                   ),
-                  // 5 槽：图鉴 / 社区 / 中间＋号（栏内居中方形按钮，
-                  // 方形底 + 十字，不用圆形）/ 工具 / 我的；槽位与页下标
+                  // 5 槽：图鉴 / 社区 / 中间＋号（与旁边 Tab 同款的
+                  // 素图标，无底色无阴影）/ 工具 / 我的；槽位与页下标
                   // 的映射：0、1、3、4。
                   child: Row(
                     children: [
@@ -332,23 +332,12 @@ class _FloatingNavBar extends StatelessWidget {
                               child: GestureDetector(
                                 onTap: onCompose,
                                 behavior: HitTestBehavior.opaque,
-                                child: Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFE86A1C),
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black
-                                            .withValues(alpha: 0.25),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Icon(Icons.add,
-                                      color: Colors.white, size: 30),
+                                child: Icon(
+                                  Icons.add,
+                                  size: 26,
+                                  color: dark
+                                      ? const Color(0xFF8A8578)
+                                      : const Color(0xFF9A917F),
                                 ),
                               ),
                             ),

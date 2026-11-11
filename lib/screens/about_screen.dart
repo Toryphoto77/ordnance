@@ -57,7 +57,6 @@ class AboutScreen extends StatelessWidget {
             'Ordnance 是一款枪械图鉴 App，包含四块：枪械图鉴、配件目录、复装手册与社区。',
             '图鉴收录 738 支真实枪械（8 个品类），每支含厂商、口径、动作、枪管、全长、重量、弹容量、产地与美国零售参考价；品类图片与名枪照片来自 Wikimedia Commons 免费授权图，详情页脚已署名。',
             '配件目录收录 163 条国内外知名厂商配件，按品类筛选；复装手册收录子弹目录、装药表、供应商与 SOP，只收录 Hornady 等公开手册原文，查不到出处的留空，绝不现编、不推算。',
-            '刀具图鉴另收录 21 把各国军刀与知名实用刀，按军用格斗刀、军用刺刀、实用直刀、实用折刀、传统刀具 5 类与国家筛选；图为刀形剪影，非实物照片，刃长与钢材查不到的写未确认。',
             '社区目前为本机版：账号、帖子、等级、勋章、靶场成绩都只保存在本机，换设备或联网版上线后需重新注册；经验榜为本机数据。',
             '本项目开源：GitHub 仓库 wangtao969/ordnance，设置页“GitHub 开源代码”可直达。',
           ], grey, icon: Icons.info_outlined),
@@ -65,7 +64,6 @@ class AboutScreen extends StatelessWidget {
             '首页图鉴页顶部搜索框可按名称、厂商、口径搜索；品类卡点进去按厂商分组折叠浏览。',
             '枪械详情页可把枪登记进“我的枪柜”（拥有状态）；枪柜里记购买日期、入手价、射弹数、归零状态、保养与故障，配件可装机到具体枪上。',
             '图鉴首屏有枪柜入口；停售名枪鉴赏在图鉴页内有独立入口。',
-            '刀具图鉴在图鉴页枪械品类下方有独立入口，点进去按分类与国家筛选，图鉴搜索也能搜到刀具。',
             '枪柜里的枪可从配件目录选配件装机到具体枪上；枪柜页可添加或移除已拥有的枪。',
           ], grey, icon: Icons.grid_view_rounded),
           _section(tr('about_manual_reload'), [
@@ -125,6 +123,7 @@ class AboutScreen extends StatelessWidget {
             tr('about_hist_34'),
             tr('about_hist_35'),
             tr('about_hist_36'),
+            tr('about_hist_37'),
           ], grey, icon: Icons.system_update_alt),
           Card(
             child: ListTile(

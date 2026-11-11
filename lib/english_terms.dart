@@ -200,7 +200,7 @@ const Map<String, String> _actionSegments = {
   '闭膛待击': 'Closed-bolt',
 };
 
-/// 产地 / 国家：全量字符串映射（738 支的全部 63 个 origin 值 + 刀具 10 国均在内）。
+/// 产地 / 国家：全量字符串映射（738 支的全部 63 个 origin 值均在内）。
 const Map<String, String> _origins = {
   '中国': 'China',
   '中国台湾': 'Taiwan',
@@ -272,7 +272,7 @@ const Map<String, String> _origins = {
 
 String originDisplay(String o) => _origins[o] ?? o;
 
-/// 刀具国家与枪械产地共用同一张表。
+/// 国家显示：与枪械产地共用同一张翻译表。
 String countryDisplay(String c) => _origins[c] ?? c;
 
 /// 厂商：21 个中文厂商值（59 支枪），标准译名；查不到原样返回。
@@ -379,17 +379,6 @@ const List<(String, String)> _accessoryWords = [
   ('拉机柄', 'Charging Handle'),
   ('握把', 'Grip'),
 ];
-
-/// 刀具分类（5 个 type 全量）。
-const Map<String, String> _knifeTypes = {
-  '传统刀具': 'Traditional Knife',
-  '军用刺刀': 'Military Bayonet',
-  '军用格斗刀': 'Military Combat Knife',
-  '实用折刀': 'Utility Folding Knife',
-  '实用直刀': 'Utility Fixed Blade',
-};
-
-String knifeTypeDisplay(String t) => _knifeTypes[t] ?? t;
 
 /// 复装组件 kind（4 个全量）。
 const Map<String, String> _componentKinds = {

@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import '../community_store.dart';
 import '../data.dart';
@@ -15,13 +14,6 @@ import 'news_screen.dart';
 import 'gun_list_screen.dart';
 import 'gun_detail_screen.dart';
 import 'legend_list_screen.dart';
-import '../knife_data.dart';
-import 'knife_detail_screen.dart';
-import 'knife_list_screen.dart';
-import '../weather_api.dart';
-import '../tools_units.dart';
-import '../location_flow.dart';
-import 'weather_screen.dart';
 
 class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key});
@@ -53,10 +45,6 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 // 第 10 项：品类中英文都要命中。
                 categoryMatches(g.category, q))
             .toList();
-    // 刀具搜索与枪械搜索并列：搜刀名、英文名、国家、分类都能命中。
-    // 今日一枪：按天取固定一把，当天不变、次日换枪。
-    final todayGun = guns[
-        DateTime.now().difference(DateTime(2020, 1, 1)).inDays % guns.length];
     // 首页枪柜模块：优先读枪柜内存镜像（枪柜页/迁移同步），
     // 尚未加载时回落旧收藏快照（迁移前的冻结数据，统一映射成档案）。
     final myGuns = cabinetProfilesCache ??
@@ -65,15 +53,6 @@ class _CatalogScreenState extends State<CatalogScreen> {
             .map((c) => GunProfile(gunName: c.gunName, rounds: c.rounds))
             .toList() ??
         [];
-    final knifeResults = q.isEmpty
-        ? <Knife>[]
-        : knives
-            .where((k) =>
-                k.name.toLowerCase().contains(q) ||
-                k.nameEn.toLowerCase().contains(q) ||
-                k.country.toLowerCase().contains(q) ||
-                k.type.toLowerCase().contains(q))
-            .toList();
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
@@ -84,10 +63,6 @@ class _CatalogScreenState extends State<CatalogScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8 + kToolbarHeight, 16, 110),
           children: [
-            // 首页细长条天气：不高，横向滚动播报当前位置温度/湿度/
-            // 风速风向；点卡片进天气页；搜索时隐藏。
-            if (_query.isEmpty) const _HomeWeatherStrip(),
-            if (_query.isEmpty) const SizedBox(height: 12),
             // 枪械资讯入口：页头太空，补一条厂商与弹药商资讯快讯；搜索时隐藏。
             if (_query.isEmpty)
               Card(
@@ -133,65 +108,6 @@ class _CatalogScreenState extends State<CatalogScreen> {
                               const SizedBox(height: 2),
                               Text(
                                 newsItems.first.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    color: grey, fontSize: 12),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Icon(Icons.chevron_right, color: grey),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            // 今日一枪 + 我的枪柜前置：搜索时隐藏，平时放在资讯卡下方。
-            if (_query.isEmpty)
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: () {
-                    tapHaptic();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => GunDetailScreen(gun: todayGun)),
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: bronze,
-                          ),
-                          child: Icon(Icons.calendar_today_outlined,
-                              size: 20,
-                              color: dark
-                                  ? const Color(0xFF000000)
-                                  : Colors.white),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(tr('catalog_today'),
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14)),
-                              const SizedBox(height: 2),
-                              Text(
-                                '${gunDisplayName(todayGun)} · ${todayGun.caliber}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -386,36 +302,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                       },
                     ),
                   )),
-              if (knifeResults.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Text(tr('catalog_knives_label'),
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: ink)),
-                const SizedBox(height: 8),
-                ...knifeResults.map((k) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: ListTile(
-                        title: Text(k.nameEn),
-                        subtitle: Text(
-                            '${countryDisplay(k.country)} · ${knifeTypeDisplay(k.type)}'),
-                        onTap: () {
-                          tapHaptic();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) =>
-                                    KnifeDetailScreen(knife: k)),
-                          );
-                        },
-                      ),
-                    )),
-              ],
-              if (results.isEmpty && knifeResults.isEmpty)
+              if (results.isEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 24),
                   child: Center(
@@ -505,65 +392,6 @@ class _CatalogScreenState extends State<CatalogScreen> {
               const SizedBox(height: 6),
               Text(tr('catalog_img_credit'),
                   style: TextStyle(color: grey, fontSize: 11)),
-              // 刀具图鉴：枪械品类下方单独的大类入口，不进 categories 列表
-              //（该列表驱动枪械网格与计数，混入会串位）。
-              const SizedBox(height: 24),
-              Text(tr('knife_title'),
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: ink)),
-              const SizedBox(height: 4),
-              Text(tr('catalog_knives_sub'),
-                  style: TextStyle(color: grey, fontSize: 13)),
-              const SizedBox(height: 12),
-              GestureDetector(
-                onTap: () {
-                  tapHaptic();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const KnifeListScreen()),
-                  );
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: cardBg,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(tr('catalog_enter_knives'),
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: ink)),
-                            const SizedBox(height: 4),
-                            Text(
-                                '卡巴军刀、M9 刺刀、莫拉伴侣刀……' + tr('catalog_total_prefix') + '${knives.length}' + tr('catalog_total_suffix_knives'),
-                                style:
-                                    TextStyle(color: grey, fontSize: 13)),
-                          ],
-                        ),
-                      ),
-                      Icon(Icons.chevron_right, color: grey),
-                    ],
-                  ),
-                ),
-              ),
               // 停售名枪鉴赏：首页下方的大类入口。
               const SizedBox(height: 24),
               Text(tr('legends'),
@@ -624,199 +452,6 @@ class _CatalogScreenState extends State<CatalogScreen> {
               ),
             ],
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// 首页细长条天气卡片：默认只显示一行提示，点按才要定位权限并拉取
-/// 当前位置天气（不在首页打开时擅自弹权限）；拉取成功后自动横向循环
-/// 滚动播报温度/湿度/风速风向/气压，点卡片进天气详情页；失败点按重试。
-class _HomeWeatherStrip extends StatefulWidget {
-  const _HomeWeatherStrip();
-
-  @override
-  State<_HomeWeatherStrip> createState() => _HomeWeatherStripState();
-}
-
-class _HomeWeatherStripState extends State<_HomeWeatherStrip> {
-  // 第 8 项：存原始数据不存格式化串，显示时按单位偏好换算。
-  WeatherData? _w;
-  bool _loading = false;
-  bool _failed = false;
-
-  /// 自动滚动播报：文本复制两份无缝循环；内容短于可视宽时不滚动。
-  final _scrollCtrl = ScrollController();
-  final _scrollKey = GlobalKey();
-  Timer? _ticker;
-  String _tickerLine = '';
-  double _tickerLoopW = 0;
-
-  @override
-  void dispose() {
-    _ticker?.cancel();
-    _scrollCtrl.dispose();
-    super.dispose();
-  }
-
-  double _textWidth(String text) {
-    final painter = TextPainter(
-      text: TextSpan(text: text, style: const TextStyle(fontSize: 13)),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    return painter.width;
-  }
-
-  /// 文本或可视宽变化时重算：需要滚动才起定时器，否则停在起点。
-  void _syncTicker() {
-    if (_w == null) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _w == null) return;
-      final line = _lineText();
-      final viewW = _scrollKey.currentContext?.size?.width;
-      if (viewW == null) return;
-      final loopW = _textWidth(line) + 48;
-      if (loopW <= viewW) {
-        _ticker?.cancel();
-        _ticker = null;
-        return;
-      }
-      if (_ticker != null && line == _tickerLine && loopW == _tickerLoopW) {
-        return;
-      }
-      _tickerLine = line;
-      _tickerLoopW = loopW;
-      _ticker?.cancel();
-      if (_scrollCtrl.hasClients) _scrollCtrl.jumpTo(0);
-      _ticker = Timer.periodic(const Duration(milliseconds: 50), (_) {
-        if (!mounted || !_scrollCtrl.hasClients) return;
-        final next = _scrollCtrl.offset + 1.5;
-        if (next >= loopW) {
-          _scrollCtrl.jumpTo(0);
-        } else {
-          _scrollCtrl.jumpTo(next);
-        }
-      });
-    });
-  }
-
-  String _lineText() {
-    final w = _w;
-    if (w == null) return '';
-    final parts = <String>[];
-    if (w.temp != null) parts.add(fmtTemp(w.temp!));
-    if (w.humidity != null) parts.add('湿度 ${w.humidity!.toStringAsFixed(0)}%');
-    if (w.windSpeed != null) {
-      parts.add('风速 ${fmtWind(w.windSpeed!)}'
-          '${w.windDir == null ? '' : ' ${compassDir(w.windDir!)}'}');
-    }
-    if (w.pressure != null) parts.add('气压 ${fmtPressure(w.pressure!)}');
-    return parts.join(' · ');
-  }
-
-  Future<void> _load() async {
-    if (_loading) return;
-    setState(() {
-      _loading = true;
-      _failed = false;
-    });
-    try {
-      final ok = await ensureLocationPermission(context);
-      if (!mounted) return;
-      if (!ok) {
-        setState(() => _failed = true);
-        return;
-      }
-      final pos = await fetchCurrentFix();
-      if (!mounted) return;
-      if (pos.value == null) {
-        setState(() => _failed = true);
-        return;
-      }
-      final w = await fetchWeather(pos.value!.latitude, pos.value!.longitude);
-      if (!mounted) return;
-      setState(() => _w = w);
-      _syncTicker();
-    } catch (_) {
-      if (mounted) setState(() => _failed = true);
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      height: 44,
-      decoration: BoxDecoration(
-        color: dark ? const Color(0xFF0D0D0D) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          if (_w != null) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const WeatherScreen()),
-            );
-          } else {
-            _load();
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Row(
-            children: [
-              const Icon(Icons.wb_sunny_outlined, size: 18),
-              const SizedBox(width: 8),
-              if (_loading)
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              else if (_w != null)
-                Expanded(
-                  child: ValueListenableBuilder<Map<String, String>>(
-                    valueListenable: unitPrefsNotifier,
-                    builder: (_, __, ___) {
-                      _syncTicker();
-                      final line = _lineText();
-                      return SingleChildScrollView(
-                        key: _scrollKey,
-                        controller: _scrollCtrl,
-                        scrollDirection: Axis.horizontal,
-                        physics: const NeverScrollableScrollPhysics(),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(line,
-                                style: const TextStyle(fontSize: 13)),
-                            const SizedBox(width: 48),
-                            Text(line,
-                                style: const TextStyle(fontSize: 13)),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                )
-              else
-                Expanded(
-                  child: Text(
-                    _failed
-                        ? tr('home_weather_failed')
-                        : tr('home_weather_load'),
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ),
-              if (_w != null)
-                const Icon(Icons.chevron_right, size: 18),
-            ],
-          ),
         ),
       ),
     );
