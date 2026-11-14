@@ -1,0 +1,59 @@
+# 安卓 CI：静态分析 + 测试 + 构建 debug APK。
+#
+# 说明：本仓库故意不提交 android/ 目录（它是 flutter create 生成的脚手架，
+# 由 build-apk.sh 在本地按需生成）。所以这里也先生成脚手架，再把仓库里的
+# 品牌图标覆盖进去，构建方式与本地脚本一致。
+
+name: Android CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Analyze, test and build debug APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.8"
+          channel: stable
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+      - name: Generate Android scaffold
+        run: |
+          flutter create --project-name firearms_catalog --org com.example --platforms android .
+          rm -f test/widget_test.dart
+          cp -r app-icon/res/. android/app/src/main/res/
+
+      - name: Build debug APK
+        run: flutter build apk --debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ordnance-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../i18n.dart';
+import '../app_version.dart';
 import '../theme_accent.dart';
 import '../main.dart';
 import '../system_actions.dart';
@@ -15,9 +16,6 @@ import 'about_screen.dart';
 import 'theme_screen.dart';
 import 'app_log_screen.dart';
 import 'feedback_screen.dart';
-
-/// 当前版本：每次发版时与 pubspec.yaml 一起改。
-const String appVersion = '2.3.2';
 
 /// 设置页：主题切换与关于信息。
 class SettingsScreen extends StatelessWidget {
@@ -183,10 +181,10 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.code, size: 22),
             title: Text(tr('about_github')),
-            subtitle: const Text('wangtao969/ordnance'),
+            subtitle: const Text('Toryphoto77/ordnance'),
             onTap: () async {
               final ok = await openSystemUrl(
-                  'https://github.com/wangtao969/ordnance');
+                  'https://github.com/Toryphoto77/ordnance');
               if (!ok && context.mounted) {
                 showAppToast(context, tr('browser_open_failed'));
               }
@@ -287,7 +285,7 @@ class SettingsScreen extends StatelessWidget {
             onPressed: () async {
               await shareChannel.invokeMethod('shareText', {
                 'text':
-                    '来玩 Ordnance，一起聊枪、晒收藏！下载：https://github.com/wangtao969/ordnance/releases/latest 邀请码：${me.id}（注册时填写）'
+                    '来玩 Ordnance，一起聊枪、晒收藏！下载：https://github.com/Toryphoto77/ordnance/releases/latest 邀请码：${me.id}（注册时填写）'
               });
             },
           ),
@@ -332,7 +330,7 @@ class SettingsScreen extends StatelessWidget {
       final client = HttpClient()
         ..connectionTimeout = const Duration(seconds: 10);
       final request = await client.getUrl(Uri.parse(
-          'https://api.github.com/repos/wangtao969/ordnance/releases/latest'));
+          'https://api.github.com/repos/Toryphoto77/ordnance/releases/latest'));
       request.headers.set('Accept', 'application/vnd.github+json');
       request.headers.set('User-Agent', 'Ordnance');
       final response =
@@ -356,7 +354,7 @@ class SettingsScreen extends StatelessWidget {
         }
       }
       final link =
-          apkUrl ?? (data['html_url'] as String? ?? 'https://github.com/wangtao969/ordnance/releases');
+          apkUrl ?? (data['html_url'] as String? ?? 'https://github.com/Toryphoto77/ordnance/releases');
       if (!context.mounted) return;
       Navigator.of(context).pop();
       if (latest.isEmpty || _compareVersions(latest, appVersion) <= 0) {

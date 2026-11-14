@@ -1,5 +1,6 @@
 import 'dart:io';
 import '../i18n.dart';
+import '../data.dart';
 
 import 'package:flutter/material.dart';
 import '../widgets/app_toast.dart';
@@ -44,6 +45,54 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
+  /// 数据概况：数字直接取自数据集，避免文案与数据脱节。
+  Widget _dataOverviewCard(Color grey) {
+    final items = <List<String>>[
+      ['${guns.length}', tr('about_data_guns')],
+      ['${accessories.length}', tr('about_data_accessories')],
+      ['${caliberInfos.length}', tr('about_data_calibers')],
+      ['${legends.length}', tr('about_data_legends')],
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.dataset_outlined, size: 22),
+            const SizedBox(width: 8),
+            Text(tr('about_data_title'),
+                style: const TextStyle(
+                    fontSize: 17, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Row(
+              children: [
+                for (final item in items)
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text(item[0],
+                            style: const TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 2),
+                        Text(item[1],
+                            style: TextStyle(color: grey, fontSize: 11)),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
@@ -58,8 +107,9 @@ class AboutScreen extends StatelessWidget {
             '图鉴收录 738 支真实枪械（8 个品类），每支含厂商、口径、动作、枪管、全长、重量、弹容量、产地与美国零售参考价；品类图片与名枪照片来自 Wikimedia Commons 免费授权图，详情页脚已署名。',
             '配件目录收录 163 条国内外知名厂商配件，按品类筛选；复装手册收录子弹目录、装药表、供应商与 SOP，只收录 Hornady 等公开手册原文，查不到出处的留空，绝不现编、不推算。',
             '社区目前为本机版：账号、帖子、等级、勋章、靶场成绩都只保存在本机，换设备或联网版上线后需重新注册；经验榜为本机数据。',
-            '本项目开源：GitHub 仓库 wangtao969/ordnance，设置页“GitHub 开源代码”可直达。',
+            '本项目开源：GitHub 仓库 Toryphoto77/ordnance，设置页“GitHub 开源代码”可直达。',
           ], grey, icon: Icons.info_outlined),
+          _dataOverviewCard(grey),
           _section(tr('about_manual_catalog'), [
             '首页图鉴页顶部搜索框可按名称、厂商、口径搜索；品类卡点进去按厂商分组折叠浏览。',
             '枪械详情页可把枪登记进“我的枪柜”（拥有状态）；枪柜里记购买日期、入手价、射弹数、归零状态、保养与故障，配件可装机到具体枪上。',
@@ -124,15 +174,16 @@ class AboutScreen extends StatelessWidget {
             tr('about_hist_35'),
             tr('about_hist_36'),
             tr('about_hist_37'),
+            tr('about_hist_38'),
           ], grey, icon: Icons.system_update_alt),
           Card(
             child: ListTile(
               leading: const Icon(Icons.code, size: 22),
               title: Text(tr('about_github')),
-              subtitle: const Text('wangtao969/ordnance'),
+              subtitle: const Text('Toryphoto77/ordnance'),
               onTap: () async {
                 final ok = await openSystemUrl(
-                    'https://github.com/wangtao969/ordnance');
+                    'https://github.com/Toryphoto77/ordnance');
                 if (!ok && context.mounted) {
                   showAppToast(context, tr('browser_open_failed'));
                 }

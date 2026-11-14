@@ -25,6 +25,8 @@ class CatalogScreen extends StatefulWidget {
 class _CatalogScreenState extends State<CatalogScreen> {
   String _query = '';
   bool _searchExpanded = false;
+  // 搜索结果的品类筛选；null 表示全部。
+  String? _filterCategory;
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +47,14 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 // 第 10 项：品类中英文都要命中。
                 categoryMatches(g.category, q))
             .toList();
+    // 搜索结果可按品类再筛一层：只列出结果里实际出现的品类。
+    final resultCategories = <String>[];
+    for (final g in results) {
+      if (!resultCategories.contains(g.category)) resultCategories.add(g.category);
+    }
+    final filtered = _filterCategory == null
+        ? results
+        : results.where((g) => g.category == _filterCategory).toList();
     // 首页枪柜模块：优先读枪柜内存镜像（枪柜页/迁移同步），
     // 尚未加载时回落旧收藏快照（迁移前的冻结数据，统一映射成档案）。
     final myGuns = cabinetProfilesCache ??
@@ -252,7 +262,10 @@ class _CatalogScreenState extends State<CatalogScreen> {
                         contentPadding:
                             const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      onChanged: (v) => setState(() => _query = v),
+                      onChanged: (v) => setState(() {
+                        _query = v;
+                        _filterCategory = null;
+                      }),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -260,6 +273,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                     onTap: () => setState(() {
                       _searchExpanded = false;
                       _query = '';
+                      _filterCategory = null;
                     }),
                     child: Container(
                       width: 44,
@@ -280,11 +294,31 @@ class _CatalogScreenState extends State<CatalogScreen> {
                   ),
                 ],
               ),
-            const SizedBox(height: 12),
-            const SizedBox(height: 12),
             const SizedBox(height: 20),
             if (_query.isNotEmpty) ...[
-              ...results.map((g) => Card(
+              Text(
+                  tr('catalog_total_prefix') +
+                      '${filtered.length}' +
+                      tr('catalog_total_suffix_guns'),
+                  style: TextStyle(color: grey, fontSize: 13)),
+              if (resultCategories.length > 1) ...[
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 34,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      _categoryChip(
+                          null, tr('range_filter_all'), bronze, grey, cardBg),
+                      for (final c in resultCategories)
+                        _categoryChip(c, categoryDisplay(c), bronze, grey,
+                            cardBg),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              ...filtered.map((g) => Card(
                     margin: const EdgeInsets.only(bottom: 8),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -452,6 +486,43 @@ class _CatalogScreenState extends State<CatalogScreen> {
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+
+  /// 搜索结果上方的品类筛选小药丸：选中为铜色底，未选中为卡片底色。
+  Widget _categoryChip(String? value, String label, Color bronze, Color grey,
+      Color cardBg) {
+    final selected = _filterCategory == value;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: GestureDetector(
+        onTap: () {
+          tapHaptic();
+          setState(() => _filterCategory = value);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected ? bronze : cardBg,
+            borderRadius: BorderRadius.circular(17),
+            border: Border.all(
+                color: selected ? bronze : grey.withValues(alpha: 0.25)),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: selected
+                  ? (Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0xFF000000)
+                      : Colors.white)
+                  : grey,
+              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
         ),
       ),
     );

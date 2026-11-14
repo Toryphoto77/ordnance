@@ -49,6 +49,10 @@ rm -rf "$BUILD_DIR/lib"
 cp -r "$WORK/lib" "$BUILD_DIR/lib"
 rm -rf "$BUILD_DIR/assets"
 cp -r "$WORK/assets" "$BUILD_DIR/assets"
+# 品牌启动图标：flutter create 的脚手图标不符合 App 视觉，用仓库里的 app-icon/res 覆盖
+if [ -d "$WORK/app-icon/res" ]; then
+  cp -r "$WORK/app-icon/res/." "$BUILD_DIR/android/app/src/main/res/"
+fi
 # 脚手架自带的 widget 测试引用的是默认 MyApp，与我们的入口类名不符，删掉
 rm -rf "$BUILD_DIR/test"
 

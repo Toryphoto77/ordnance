@@ -1,67 +1,96 @@
-# Gun's Map
+# Ordnance
 
-Gun's Map 是一款安卓枪械图鉴 App，三个底部 Tab：
+Ordnance 是一款 Flutter 枪械图鉴 App：枪械图鉴、配件目录、复装手册与社区四个 Tab，中文 / 繁体中文 / English 三语。数据只记录公开资料，查不到出处的一律留空，不现编、不推算。
 
-- **图鉴**：按品类浏览枪械（手枪、步枪、狙击步枪、反器材步枪、冲锋枪、机枪、霰弹枪等），列表呈现名称 / 厂家 / 口径 + 侧视图；详情页有可拖动旋转的立体预览、部件热点、参数表、适配弹药与可选配件装配预览。
-- **配件**：知名厂商配件目录（制退器、弹匣、瞄准镜、弹道计算器、红外热成像仪等）。
-- **复装**：子弹复装手册，按口径列出弹头 / 弹壳 / 火药 / 底火组件。装药数据以厂商公开手册（Hornady 等）为准，不现编。
+## 功能
 
-技术栈：Flutter（Dart），深色主题。包内部名 `firearms_catalog`，应用显示名 Gun's Map。
+- **图鉴**：738 支真实枪械、8 个品类；按名称 / 厂商 / 口径搜索，搜索结果可再按品类筛选；品类图与名枪照片来自 Wikimedia Commons 免费授权图，详情页页脚署名。详情页可把枪登记进「我的枪柜」，记录购买日期、入手价、射弹数、归零状态、保养与故障。
+- **配件目录**：163 条国内外厂商配件，按品类筛选，可装机到具体枪上；「我的配件库」只记本机件数。
+- **复装手册**：子弹目录 63 个口径、装药表 34 条（只收公开手册原文）、复装组件 308 条、供应商与 SOP。
+- **工具**：单位制、DOPE 数据本（归零助手）、复装成本、弹药库存、保养记录、测速导入、靶场行程与换算、天气与传感器、射手基础课。
+- **社区**：本机版动态流、私信、经验等级、勋章、靶场成绩公开。账号与帖子只存在本机（SharedPreferences），换设备需重新注册；经验榜为本机数据。
+- **其他**：主题色与深浅色、检查更新（GitHub Releases，仅 Android）、导出我的数据、App 日志。
 
-## 目录结构
+## 数据规模
+
+| 数据 | 数量 |
+| --- | --- |
+| 枪械 | 738（8 个品类） |
+| 配件 | 163 |
+| 口径（子弹目录） | 63 |
+| 停售名枪鉴赏 | 12 |
+| 复装组件 | 308 |
+| 装药表条目 | 34 |
+
+数字由测试自检（见 `test/data_integrity_test.dart`），改动数据后跑一遍测试即可确认没有漏。
+
+## 技术栈与结构
+
+Flutter 3.47.8 / Dart，Material 3，无第三方运行时依赖（只有 `flutter_test`）。
 
 ```text
-lib/                          Dart 源码
-  main.dart                   入口（MaterialApp，标题 Gun's Map）
-  models.dart                 数据模型
-  data.dart                   品类 / 枪械 / 配件 / 复装组件数据
-  screens/                    五个界面：图鉴、枪械列表、枪械详情、配件、复装
-pubspec.yaml                  依赖与资源声明
-assets/images/                枪械侧视图（8 张 webp，见下方图片说明）
-app-icon/                     启动图标全套
-  res/                        安卓 res 资源（mipmap / drawable / values）
-  optional/                   可选的自适应图标 xml
-  master/                     母版大图与预览图
-  README-安卓图标使用说明.md   图标使用说明
-build-apk.sh                  在线编译脚本（见下方）
-build-apk-offline.sh          离线编译脚本（见下方）
-fetch-mirror.py               离线镜像抓取脚本（见下方）
+lib/
+  main.dart               入口、底部导航
+  app_version.dart        App 版本号（单一来源，与 pubspec.yaml 同步）
+  models.dart             数据模型
+  data.dart               枪械 / 配件 / 口径 / 名枪 / 复装数据
+  i18n.dart               三语界面文案（简体 / 繁体 / 英文）
+  community_store.dart    本机社区数据（账号、帖子、等级、勋章）
+  screens/                各页面
+  widgets/                复用组件
+assets/images/            枪图、品类图、名枪图、App 图标
+assets/fonts/             Manrope 四个字重
+app-icon/res/             Android 启动图标（mipmap / 自适应前景 / 背景色）
+shaders/                 液体玻璃 shader
+test/                    数据完整性 + 多语言完整性测试
+.github/workflows/       Android CI（分析 + 测试 + debug APK）与 iOS TestFlight
+build-apk.sh             本地在线编译脚本
+build-apk-offline*.sh    受限网络下的离线编译脚本
+fetch-mirror.py          离线 Gradle 依赖镜像抓取
 ```
 
-## 编译方式一：在线编译
+## 构建
+
+仓库**不提交 `android/` 目录**：它由 `flutter create` 生成，脚本会把 `lib/`、`assets/`、`app-icon/res/` 覆盖进去再编译。
 
 ```bash
-bash build-apk.sh
+bash build-apk.sh            # 在线编译，产物 app-debug.apk
+bash build-apk-offline.sh    # 出站受限时先 python3 fetch-mirror.py，再跑这个
 ```
 
-脚本会用 `flutter create` 生成安卓工程骨架，覆盖为本仓库代码，跑 `flutter pub get`、`flutter analyze`，再 `flutter build apk --debug`，成功后把 APK 拷到 `app-debug.apk`。
+iOS 走 `.github/workflows/ios-testflight.yml`（需自备 Apple 开发者账号与签名 Secrets，手动触发）。
 
-注意：在线编译要求 Gradle 能直接访问插件仓库与 Maven Central；如果构建环境的出站网络受限，Gradle 会在配置阶段解析插件失败，改走方式二。
+Android 的 `flutter create` 参数为 `--project-name firearms_catalog --org com.example`，包名是 `com.example.firearms_catalog`；iOS Bundle ID 是 `com.wangtao969.ordnance`。**改包名会影响既有安装的升级覆盖，本次交接不动签名与包名**，需要更换时请连同原签名密钥一起处理。
 
-## 编译方式二：离线编译（推荐用于受限网络）
+## 测试与 CI
 
-适用于 Gradle 出站 TCP 被拦截、但 curl / Dart 仍可联网的环境：
+```bash
+flutter analyze
+flutter test
+```
 
-1. 先跑镜像抓取脚本，把 Gradle 依赖闭包下到本地 Maven 镜像仓库（默认 `~/gradle-offline-mirror`）：
+- `test/data_integrity_test.dart`：枪械数量、品类合法性、名称唯一性、图片与字体文件存在性、`appVersion` 与 `pubspec.yaml` 一致。
+- `test/i18n_keys_test.dart`：三套语言键集合完全一致、界面里 `tr('...')` 用到的键都已登记。
+- `.github/workflows/android.yml`：push / PR 时跑 `flutter analyze`、`flutter test`，再生成安卓脚手架并构建 debug APK。
 
-   ```bash
-   python3 fetch-mirror.py
-   ```
+## 版本号
 
-   该脚本用 curl 从 Maven Central / Google Maven / plugins.gradle.org / download.flutter.io 抓取，镜像目录只是本地构建缓存，**不要提交进仓库**（已在 `.gitignore` 里排除）。
+发版时同时改两处：
 
-2. 再跑离线编译脚本：
+- `pubspec.yaml` 的 `version: 2.4.0+49`（版本名 + 构建号）
+- `lib/app_version.dart` 的 `appVersion`（App 内显示、检查更新比对）
 
-   ```bash
-   bash build-apk-offline.sh
-   ```
+`test/data_integrity_test.dart` 会校验两者一致。
 
-   脚本同样先 `flutter create` 生成骨架并覆盖代码，然后把本地 file:// 镜像仓库排在插件与依赖解析的最前面，并开 `org.gradle.offline=true`，Gradle 全程不联网；`flutter pub get` 仍走正常网络。成功后 APK 同样落在 `app-debug.apk`。
+## 更新检查与发布
 
-两种方式都不需要改包名：编译产物为 debug APK，安装到手机时需允许“未知来源”。
+App 内「检查更新」请求 `https://api.github.com/repos/Toryphoto77/ordnance/releases/latest`，取第一个 `.apk` 资产。发 Release 时**必须上传 APK 资产**，否则只能跳到网页。
 
-## 图片资源说明
+## v2.4.0 交接说明
 
-`assets/images/` 下 App 实际引用 8 张短名侧视图：`glock17.webp`、`ak47.webp`、`m82a1.webp`、`mp5.webp`、`rem870.webp`、`m249.webp`、`rem700.webp`、`svd.webp`。其余枪械暂无侧视图，App 内显示占位图标。
-
-注意：因本仓库推送通道只支持文本文件，二进制图片（`assets/images/*.webp` 与 `app-icon` 下的 `*.png`）暂未包含在本次推送中；拉取后请将上述图片放入对应目录后再编译，否则资源声明会找不到文件。配置、脚本、图标 xml 与说明文档已随本次推送；Dart 源码（`lib/`）因正在并行改动暂缓推送，待数据结构工作落地后补推，届时拉取最新代码即可。
+- 仓库维护从 `wangtao969` 转到 `Toryphoto77`；App 内 GitHub 链接与检查更新地址已同步。
+- 补回此前未提交的 `assets/images`、`assets/fonts` 与 Android 图标（从 v2.3.2 官方 APK 还原，`media-generation-*` 中间产物不提交）。
+- 版本号收敛到 `lib/app_version.dart` 单一来源。
+- 清理了 v2.3.2 已下线功能遗留的未引用文件（刀具图鉴、任务 / 签到 / 通知中心），`flutter analyze` 不再报错。
+- 补齐原先只有简中的 26 个界面的繁中 / 英文译文；新增搜索结果的品类筛选与数据概况卡。
+- 已知限制：社区仍为本机版；本环境没有原发布签名密钥，Release 只提供未签名 / debug 构建说明，签名版需原密钥在本地或 CI Secrets 中构建。
