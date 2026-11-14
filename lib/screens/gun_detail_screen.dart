@@ -213,7 +213,7 @@ class _GunDetailScreenState extends State<GunDetailScreen> {
                     .map((a) => Chip(
                         label: Text(
                             '${tr('assembled_prefix')}${accessoryDisplay(a)}'),
-                        backgroundColor: Colors.amber.withOpacity(0.2)))
+                        backgroundColor: Colors.amber.withValues(alpha: 0.2)))
                     .toList(),
               ),
             ),

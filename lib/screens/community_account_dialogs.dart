@@ -47,7 +47,7 @@ class _GlassDialog extends StatelessWidget {
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 30,
               offset: const Offset(0, 12),
             ),
@@ -64,7 +64,7 @@ class _GlassDialog extends StatelessWidget {
                     : const Color(0xE8FFFFFF),
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(
-                  color: Colors.white.withOpacity(dark ? 0.16 : 0.6),
+                  color: Colors.white.withValues(alpha: dark ? 0.16 : 0.6),
                 ),
               ),
               padding: const EdgeInsets.fromLTRB(22, 18, 22, 20),
@@ -114,7 +114,7 @@ class _GlassDialog extends StatelessWidget {
         height: 30,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.white.withOpacity(dark ? 0.12 : 0.6),
+          color: Colors.white.withValues(alpha: dark ? 0.12 : 0.6),
         ),
         child: Icon(Icons.close,
             size: 17,
@@ -130,7 +130,7 @@ InputDecoration _glassField(BuildContext context, String label) {
   return InputDecoration(
     labelText: label,
     filled: true,
-    fillColor: Colors.white.withOpacity(dark ? 0.08 : 0.55),
+    fillColor: Colors.white.withValues(alpha: dark ? 0.08 : 0.55),
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
@@ -182,7 +182,7 @@ Widget _errorBar(String error) {
     margin: const EdgeInsets.only(top: 10),
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
     decoration: BoxDecoration(
-      color: Colors.red.withOpacity(0.12),
+      color: Colors.red.withValues(alpha: 0.12),
       borderRadius: BorderRadius.circular(10),
     ),
     child: Text(error, style: const TextStyle(color: Colors.red, fontSize: 13)),
@@ -213,7 +213,7 @@ Widget _avatarPickerRow({
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 side: BorderSide(
-                    color: Colors.white.withOpacity(0.5)),
+                    color: Colors.white.withValues(alpha: 0.5)),
               ),
               onPressed: () async {
                 final bytes = await _pickAvatar(context);
@@ -342,7 +342,7 @@ Widget _glassSwitchRow({
         valueListenable: accentNotifier,
         builder: (_, accent, __) => Switch(
           value: value,
-          activeColor: accent,
+          activeThumbColor: accent,
           onChanged: onChanged,
         ),
       ),
@@ -360,7 +360,7 @@ Future<bool> showRegisterDialog(BuildContext context) async {
   var obscure = true;
   final ok = await showDialog<bool>(
     context: context,
-    barrierColor: Colors.black.withOpacity(0.35),
+    barrierColor: Colors.black.withValues(alpha: 0.35),
     builder: (dialogContext) => StatefulBuilder(
       builder: (context, setDialogState) => _GlassDialog(
         title: tr('register_title'),
@@ -459,7 +459,7 @@ Future<bool> showLoginDialog(BuildContext context) async {
   var obscure = true;
   final ok = await showDialog<bool>(
     context: context,
-    barrierColor: Colors.black.withOpacity(0.35),
+    barrierColor: Colors.black.withValues(alpha: 0.35),
     builder: (dialogContext) => StatefulBuilder(
       builder: (context, setDialogState) => _GlassDialog(
         title: tr('login'),
@@ -522,7 +522,7 @@ Future<void> showEditProfileDialog(BuildContext context) async {
   var favPublic = account.favoritesPublic;
   final saved = await showDialog<bool>(
     context: context,
-    barrierColor: Colors.black.withOpacity(0.35),
+    barrierColor: Colors.black.withValues(alpha: 0.35),
     builder: (dialogContext) => StatefulBuilder(
       builder: (context, setDialogState) => _GlassDialog(
         title: tr('edit_profile'),
@@ -604,7 +604,7 @@ Future<void> showEditProfileDialog(BuildContext context) async {
 void askLoginDialog(BuildContext context) {
   showDialog(
     context: context,
-    barrierColor: Colors.black.withOpacity(0.35),
+    barrierColor: Colors.black.withValues(alpha: 0.35),
     builder: (dialogContext) => _GlassDialog(
       title: tr('login_required_title'),
       actions: Column(
