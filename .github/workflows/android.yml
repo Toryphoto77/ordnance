@@ -47,6 +47,7 @@ jobs:
           flutter create --project-name firearms_catalog --org com.example --platforms android .
           rm -f test/widget_test.dart
           cp -r app-icon/res/. android/app/src/main/res/
+          python3 patch-android-config.py
 
       - name: Build debug APK
         run: flutter build apk --debug

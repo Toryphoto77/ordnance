@@ -1,0 +1,159 @@
+# 安卓正式版：推送 v* 标签时用正式密钥库签名、校验证书并上传到 GitHub Release。
+#
+# 需要先在本仓库 Settings → Secrets and variables → Actions 配好：
+#   ANDROID_KEYSTORE_BASE64    keystore 的 base64（base64 -w0 release.jks）
+#   ANDROID_KEYSTORE_PASSWORD  密钥库口令
+#   ANDROID_KEY_PASSWORD       密钥口令（PKCS12 通常与库口令相同）
+#   ANDROID_KEY_ALIAS          别名，如 ordnance
+# 可选（Variables）：ANDROID_CERT_SHA256，填证书 SHA-256 指纹后构建会核对，
+# 防止 CI 用错密钥签出一个无法覆盖安装的包。
+#
+# 手动验证链路：Actions → Android Release → Run workflow，
+# 勾选 use_test_key 会用一次性测试密钥构建，只上传 artifact、不发 Release。
+
+name: Android Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "要发布的 tag（如 v3.0.0），手动运行时填"
+        required: false
+      use_test_key:
+        description: "用一次性测试密钥验证链路（不发布）"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build signed APK and publish
+    runs-on: ubuntu-latest
+    env:
+      KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      EXPECTED_SHA: ${{ vars.ANDROID_CERT_SHA256 }}
+      USE_TEST_KEY: ${{ inputs.use_test_key }}
+      INPUT_TAG: ${{ inputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version and tag
+        run: |
+          VERSION=$(sed -n 's/^version: *\([0-9][^+]*\).*/\1/p' pubspec.yaml)
+          if [ -z "$VERSION" ]; then echo "::error::pubspec.yaml 里读不到版本号"; exit 1; fi
+          TAG="${INPUT_TAG:-${GITHUB_REF_NAME}}"
+          if [ "${GITHUB_REF}" = "refs/heads/main" ] && [ -z "$INPUT_TAG" ]; then
+            echo "::error::手动运行请填 tag；否则只会在推送 v* 标签时自动发布"
+            exit 1
+          fi
+          case "$TAG" in v*) ;; *) echo "::error::tag 必须以 v 开头：$TAG"; exit 1;; esac
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "::error::tag $TAG 与 pubspec 版本 $VERSION 不一致，请先改 pubspec 与 lib/app_version.dart"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.8"
+          channel: stable
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Analyze and test
+        run: |
+          flutter analyze
+          flutter test
+
+      - name: Prepare signing material
+        run: |
+          KS="$RUNNER_TEMP/release.jks"
+          if [ -n "$KEYSTORE_B64" ]; then
+            printf '%s' "$KEYSTORE_B64" | base64 -d > "$KS"
+            echo "SIGNED=true" >> "$GITHUB_ENV"
+            echo "PUBLISH=true" >> "$GITHUB_ENV"
+          elif [ "$USE_TEST_KEY" = "true" ]; then
+            keytool -genkeypair -keystore "$KS" -alias ordnance -keyalg RSA \
+              -keysize 4096 -validity 365 -storepass test-only-pass \
+              -keypass test-only-pass -dname "CN=Ordnance Test Key, O=Toryphoto77, C=CN"
+            echo "SIGNED=true" >> "$GITHUB_ENV"
+            echo "PUBLISH=false" >> "$GITHUB_ENV"
+            echo "::warning::使用一次性测试密钥，产物仅作链路验证，不会发布"
+          else
+            echo "::error::缺少 ANDROID_KEYSTORE_BASE64。请先在仓库 Secrets 配置签名材料（见 README「签名与发版」）；只想验证链路可手动运行并勾选 use_test_key。"
+            exit 1
+          fi
+          if [ -z "$KEY_ALIAS" ]; then echo "KEY_ALIAS=ordnance" >> "$GITHUB_ENV"; fi
+          echo "KEYSTORE_PATH=$KS" >> "$GITHUB_ENV"
+
+      - name: Generate Android scaffold and signing config
+        run: |
+          flutter create --project-name firearms_catalog --org com.example --platforms android .
+          rm -f test/widget_test.dart
+          cp -r app-icon/res/. android/app/src/main/res/
+          if [ "$PUBLISH" = "false" ]; then
+            STORE_PASSWORD=test-only-pass
+            KEY_PASSWORD=test-only-pass
+            KEY_ALIAS=ordnance
+          fi
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=%s\n' \
+            "$STORE_PASSWORD" "${KEY_PASSWORD:-$STORE_PASSWORD}" \
+            "${KEY_ALIAS:-ordnance}" "$KEYSTORE_PATH" > android/key.properties
+          python3 patch-android-config.py
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Verify signature
+        run: |
+          APKSIGNER=$(find "${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}/build-tools" -name apksigner | sort | tail -1)
+          "$APKSIGNER" verify --print-certs build/app/outputs/flutter-apk/app-release.apk | tee "$RUNNER_TEMP/certs.txt"
+          ACTUAL=$(grep -i "SHA-256 digest" "$RUNNER_TEMP/certs.txt" | head -1 | awk '{print $NF}')
+          echo "APK 证书 SHA-256：$ACTUAL"
+          if [ -n "$EXPECTED_SHA" ]; then
+            EXPECTED=$(printf '%s' "$EXPECTED_SHA" | tr -d ': ' | tr 'A-F' 'a-f')
+            ACTUAL_NORM=$(printf '%s' "$ACTUAL" | tr -d ': ' | tr 'A-F' 'a-f')
+            if [ "$EXPECTED" != "$ACTUAL_NORM" ]; then
+              echo "::error::签名指纹与 ANDROID_CERT_SHA256 不一致，这个包无法覆盖安装老版本"
+              exit 1
+            fi
+            echo "指纹与仓库变量一致"
+          fi
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk "dist/Ordnance-v$VERSION.apk"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ordnance-release-apk
+          path: dist/Ordnance-*.apk
+          if-no-files-found: error
+
+      - name: Publish to GitHub Release
+        if: env.PUBLISH == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" --title "Ordnance $TAG" --generate-notes
+          fi
+          gh release upload "$TAG" "dist/Ordnance-v$VERSION.apk" --clobber
+          echo "已上传：$TAG / Ordnance-v$VERSION.apk"

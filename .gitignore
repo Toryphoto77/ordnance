@@ -18,3 +18,5 @@ assets/images/media-generation-*
 
 # 日志
 *.log
+# 签名材料（密钥库与口令，绝不入库）
+signing/

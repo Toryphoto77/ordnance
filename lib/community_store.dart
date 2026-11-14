@@ -1640,6 +1640,44 @@ class CommunityStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 从旧版本「导出我的数据」的 JSON 恢复数据到当前账号。
+  /// v3.0.0 换了签名与新包名，旧版无法覆盖升级，只能装新版后手动导入。
+  /// 返回新增条目数；未登录返回 -2，格式不对返回 -1。
+  int importLegacyExport(Map<String, dynamic> j) {
+    final me = current;
+    if (me == null) return -2;
+    if (j['app'] != 'Ordnance') return -1;
+    var added = 0;
+    final collection = j['collection'];
+    if (collection is List) {
+      for (final e in collection) {
+        if (e is! Map) continue;
+        final item = CollectionItem.fromJson(Map<String, dynamic>.from(e));
+        if (item.gunName.isEmpty) continue;
+        final dup = me.collection
+            .any((c) => c.kind == item.kind && c.gunName == item.gunName);
+        if (dup) continue;
+        me.collection.add(item);
+        added++;
+      }
+    }
+    final scores = j['rangeScores'];
+    if (scores is List) {
+      for (final e in scores) {
+        if (e is! Map) continue;
+        final score = RangeScore.fromJson(Map<String, dynamic>.from(e));
+        if (me.rangeScores.any((r) => r.id == score.id)) continue;
+        me.rangeScores.add(score);
+        added++;
+      }
+    }
+    // 经验只升不降：旧账号的经验更高时抬到旧值，等级随之重算。
+    final oldXp = ((j['account'] as Map?)?['totalXp'] as num?)?.toInt() ?? 0;
+    if (oldXp > me.totalXp) me.totalXp = oldXp;
+    notifyListeners();
+    return added;
+  }
+
   /// 发帖：命中敏感词直接返回词本身，调用方弹提示；成功返回 null。
   String? createPost({
     required String title,

@@ -92,6 +92,13 @@ class SettingsScreen extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const AppLogScreen()),
             ),
           ),
+          ListTile(
+            leading: const Icon(Icons.move_to_inbox_outlined, size: 22),
+            title: Text(tr('settings_import_title')),
+            subtitle: Text(tr('settings_import_subtitle'),
+                style: TextStyle(color: grey, fontSize: 12)),
+            onTap: () => _importData(context),
+          ),
           const SizedBox(height: 24),
           ValueListenableBuilder<Color>(
             valueListenable: accentNotifier,
@@ -202,6 +209,69 @@ class SettingsScreen extends StatelessWidget {
       ),
       ),
     );
+  }
+
+  /// 从旧版导入：粘贴旧版「导出我的数据」的 JSON，
+  /// 合并收藏、靶场成绩与经验。旧版签名不同无法覆盖升级，只能这样迁移。
+  Future<void> _importData(BuildContext context) async {
+    if (communityStore.current == null) {
+      showAppToast(context, tr('settings_import_need_login'));
+      return;
+    }
+    final controller = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(tr('settings_import_title')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(tr('settings_import_note'),
+                style: const TextStyle(fontSize: 12)),
+            const SizedBox(height: 10),
+            TextField(
+              controller: controller,
+              maxLines: 6,
+              decoration:
+                  InputDecoration(hintText: tr('settings_import_hint')),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(tr('cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(tr('settings_import_action')),
+          ),
+        ],
+      ),
+    );
+    final text = controller.text.trim();
+    if (ok != true) return;
+    int added;
+    try {
+      final decoded = jsonDecode(text);
+      if (decoded is! Map<String, dynamic>) {
+        throw const FormatException();
+      }
+      added = communityStore.importLegacyExport(decoded);
+    } catch (_) {
+      if (context.mounted) showAppToast(context, tr('settings_import_bad'));
+      return;
+    }
+    if (!context.mounted) return;
+    if (added == -2) {
+      showAppToast(context, tr('settings_import_need_login'));
+    } else if (added < 0) {
+      showAppToast(context, tr('settings_import_bad'));
+    } else {
+      showAppToast(context,
+          '${tr('settings_import_done_prefix')}$added${tr('settings_import_done_suffix')}');
+    }
   }
 
   /// 导出我的数据：与快捷操作面板里的“导出我的数据”共用同一份逻辑。
