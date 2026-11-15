@@ -10,6 +10,8 @@ import '../widgets/score_grade_chip.dart';
 import 'community_account_dialogs.dart';
 import 'community_board_screen.dart';
 import 'community_compose_screen.dart';
+import 'community_guidelines_screen.dart';
+import 'my_screen.dart';
 import 'community_dm_screen.dart';
 import 'community_post_detail_screen.dart';
 import 'community_profile_screen.dart';
@@ -465,6 +467,15 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold)),
                         const Spacer(),
+                        IconButton(
+                          tooltip: tr('tab_mine'),
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const MyScreen()),
+                          ),
+                          icon: const Icon(Icons.person_outline),
+                        ),
                         Stack(
                           clipBehavior: Clip.none,
                           children: [
@@ -618,6 +629,16 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                       OutlinedButton(
                                         onPressed: _openComposer,
                                         child: Text(tr('feed_post_first')),
+                                      ),
+                                      TextButton(
+                                        onPressed: () => Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (_) =>
+                                                  const CommunityGuidelinesScreen()),
+                                        ),
+                                        child: Text(
+                                            tr('community_guidelines_title')),
                                       ),
                                     ],
                                   ),

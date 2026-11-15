@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../community_store.dart';
 import '../i18n.dart';
+import '../widgets/app_toast.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/glass_dialog.dart';
 import 'community_profile_screen.dart';
@@ -521,7 +522,11 @@ class _CommunityDmThreadScreenState extends State<CommunityDmThreadScreen> {
                           onPressed: () {
                             final text = _ctrl.text.trim();
                             if (text.isEmpty) return;
-                            communityStore.sendDm(peer.id, text);
+                            final blocked =
+                                communityStore.sendDm(peer.id, text);
+                            if (blocked != null && context.mounted) {
+                              showAppToast(context, blocked);
+                            }
                             _ctrl.clear();
                           },
                           icon: const Icon(Icons.send,

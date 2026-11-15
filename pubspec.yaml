@@ -1,7 +1,7 @@
 name: firearms_catalog
-description: Ordnance 枪械图鉴
+description: Ordnance shooting-sports tool
 publish_to: 'none'
-version: 3.0.0+51
+version: 3.0.1+52
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

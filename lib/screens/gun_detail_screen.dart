@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../ballistic_store.dart';
+import '../gun_cabinet_data.dart';
 import '../gun_setup_data.dart';
 import '../data.dart';
 import '../english_terms.dart';
@@ -7,11 +8,11 @@ import '../haptics.dart';
 import '../i18n.dart';
 import '../models.dart';
 import '../widgets/app_toast.dart';
-import '../widgets/parametric_silhouette.dart';
-import '../widgets/family_diagram.dart';
 import '../widgets/app_top_bar.dart';
+import 'ammo_inventory_screen.dart';
 import 'gun_compare_screen.dart';
 import 'dope_screen.dart';
+import 'maintenance_screen.dart';
 
 class GunDetailScreen extends StatefulWidget {
   final Gun gun;
@@ -94,116 +95,30 @@ class _GunDetailScreenState extends State<GunDetailScreen> {
     sgCtrl.dispose();
   }
 
-  static List<(String, String, double, double)> _hotspots() => [
-        (tr('detail_hot_muzzle'), tr('detail_hot_muzzle_desc'), 0.08, 0.42),
-        (tr('detail_hot_sight'), tr('detail_hot_sight_desc'), 0.38, 0.18),
-        (tr('detail_hot_mag'), tr('detail_hot_mag_desc'), 0.45, 0.62),
-        (tr('detail_hot_trigger'), tr('detail_hot_trigger_desc'), 0.55, 0.55),
-        (tr('detail_hot_stock'), tr('detail_hot_stock_desc'), 0.88, 0.45),
-      ];
+  Future<void> _addToArmory(Gun gun) async {
+    final profiles = await loadGunProfiles();
+    if (profiles.any((p) => p.gunName == gun.name)) {
+      if (mounted) showAppToast(context, tr('armory_already'));
+      return;
+    }
+    profiles.add(GunProfile(gunName: gun.name));
+    await saveGunProfiles(profiles);
+    cabinetProfilesCache = profiles;
+    if (mounted) showAppToast(context, tr('armory_added'));
+  }
 
   @override
   Widget build(BuildContext context) {
     final gun = widget.gun;
-    // 图区三层：实物照片 > 族系识别图 > 参数化轮廓。
-    final diagramKey = familyDiagramOf(gun);
-    // 英文界面显示英文版族系名与识别要点（与中文表同 key）。
-    final diagramInfo = diagramKey == null
-        ? null
-        : (localeNotifier.value == localeEn
-            ? familyDiagramInfoEn[diagramKey]
-            : familyDiagramInfo[diagramKey]);
     return Scaffold(
       appBar: SubPageAppBar(title: gunDisplayName(gun)),
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
-          // 图区：静态展示，热点可点看部位说明
-          Container(
-            height: 220,
-            decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.black
-                  : const Color(0xFF1E1E1E),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Stack(
-              children: [
-                Center(
-                  child: gun.image != null
-                        ? Image.asset(gun.image!, fit: BoxFit.contain)
-                        : diagramKey != null
-                            ? FamilyDiagram(
-                                family: diagramKey,
-                                width: MediaQuery.of(context).size.width -
-                                    72,
-                                height:
-                                    (MediaQuery.of(context).size.width -
-                                            72) *
-                                        0.5,
-                              )
-                            : ParametricSilhouette(
-                                gun: gun,
-                                width: MediaQuery.of(context).size.width -
-                                    72,
-                                height:
-                                    (MediaQuery.of(context).size.width -
-                                            72) *
-                                        0.44,
-                              ),
-                ),
-                for (final h in _hotspots())
-                  Positioned(
-                    left: MediaQuery.of(context).size.width * h.$3 - 14,
-                    top: 220 * h.$4 - 14,
-                    child: GestureDetector(
-                      onTap: () => showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          title: Text(h.$1),
-                          content: Text(h.$2),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: Text(tr('got_it')),
-                            ),
-                          ],
-                        ),
-                      ),
-                      child: Container(
-                        width: 28,
-                        height: 28,
-                        decoration: const BoxDecoration(
-                          color: Colors.amber,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.add,
-                            size: 18, color: Colors.black),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (gun.image == null)
-            if (diagramInfo != null)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(tr('detail_family_prefix') + diagramInfo.$1 + tr('detail_family_suffix'),
-                      style:
-                          const TextStyle(color: Colors.grey, fontSize: 12)),
-                  for (final p in diagramInfo.$2)
-                    Text('· $p',
-                        style: const TextStyle(
-                            color: Colors.grey, fontSize: 12)),
-                ],
-              )
-            else
-              Text(
-                  tr('detail_no_photo_note'),
-                  style: TextStyle(color: Colors.grey, fontSize: 12)),
+          if (gun.image != null) ...[
+            Image.asset(gun.image!, height: 180, fit: BoxFit.contain),
+            const SizedBox(height: 8),
+          ],
           if (_assembled.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 8),
@@ -230,6 +145,37 @@ class _GunDetailScreenState extends State<GunDetailScreen> {
               padding: const EdgeInsets.only(top: 4),
               child: Text(tr('detail_price_prefix') + '${gun.price}' + tr('detail_price_suffix'),
                   style: const TextStyle(color: Colors.grey, fontSize: 14)),
+            ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton(
+                onPressed: () => _addToArmory(gun),
+                child: Text(tr('detail_add_armory')),
+              ),
+              OutlinedButton(
+                onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const MaintenanceScreen())),
+                child: Text(tr('detail_maint')),
+              ),
+              OutlinedButton(
+                onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const AmmoInventoryScreen())),
+                child: Text(tr('detail_ammo')),
+              ),
+            ],
+          ),
+          if (gun.source.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text('${tr('detail_source')}${gun.source}',
+                  style: const TextStyle(color: Colors.grey, fontSize: 12)),
             ),
           const SizedBox(height: 12),
           Text(tr('params'),

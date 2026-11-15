@@ -291,7 +291,9 @@ class _GunCabinetScreenState extends State<GunCabinetScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(profile.gunName),
+        title: Text(profile.nickname.isEmpty
+            ? profile.gunName
+            : '${profile.nickname} · ${profile.gunName}'),
         content: Text(tr('cab_remove_confirm')),
         actions: [
           TextButton(
@@ -325,6 +327,16 @@ class _GunCabinetScreenState extends State<GunCabinetScreen> {
     final maintCtrl =
         TextEditingController(text: existing?.maintenanceNote ?? '');
     final faultCtrl = TextEditingController(text: existing?.faultNote ?? '');
+    final nickCtrl = TextEditingController(text: existing?.nickname ?? '');
+    final serialCtrl = TextEditingController(text: existing?.serial ?? '');
+    final notesCtrl =
+        TextEditingController(text: existing?.purchaseNotes ?? '');
+    final configCtrl =
+        TextEditingController(text: existing?.configuration ?? '');
+    final everyRoundsCtrl = TextEditingController(
+        text: '${existing?.maintEveryRounds ?? 500}');
+    final everyDaysCtrl = TextEditingController(
+        text: '${existing?.maintEveryDays ?? 90}');
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -354,6 +366,32 @@ class _GunCabinetScreenState extends State<GunCabinetScreen> {
                   controller: faultCtrl,
                   decoration:
                       InputDecoration(labelText: tr('cab_fault'))),
+              TextField(
+                  controller: nickCtrl,
+                  decoration:
+                      InputDecoration(labelText: tr('armory_nickname'))),
+              TextField(
+                  controller: serialCtrl,
+                  decoration:
+                      InputDecoration(labelText: tr('armory_serial'))),
+              TextField(
+                  controller: notesCtrl,
+                  decoration:
+                      InputDecoration(labelText: tr('armory_notes'))),
+              TextField(
+                  controller: configCtrl,
+                  decoration:
+                      InputDecoration(labelText: tr('armory_config'))),
+              TextField(
+                  controller: everyRoundsCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration:
+                      InputDecoration(labelText: tr('armory_every_rounds'))),
+              TextField(
+                  controller: everyDaysCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration:
+                      InputDecoration(labelText: tr('armory_every_days'))),
             ],
           ),
         ),
@@ -374,11 +412,23 @@ class _GunCabinetScreenState extends State<GunCabinetScreen> {
     final zero = zeroCtrl.text.trim();
     final maint = maintCtrl.text.trim();
     final fault = faultCtrl.text.trim();
+    final nickname = nickCtrl.text.trim();
+    final serial = serialCtrl.text.trim();
+    final purchaseNotes = notesCtrl.text.trim();
+    final configuration = configCtrl.text.trim();
+    final everyRounds = int.tryParse(everyRoundsCtrl.text.trim()) ?? 500;
+    final everyDays = int.tryParse(everyDaysCtrl.text.trim()) ?? 90;
     purchaseCtrl.dispose();
     priceCtrl.dispose();
     zeroCtrl.dispose();
     maintCtrl.dispose();
     faultCtrl.dispose();
+    nickCtrl.dispose();
+    serialCtrl.dispose();
+    notesCtrl.dispose();
+    configCtrl.dispose();
+    everyRoundsCtrl.dispose();
+    everyDaysCtrl.dispose();
     if (ok != true || !mounted) return;
     setState(() {
       _profiles.removeWhere((p) => p.gunName == gunName);
@@ -391,6 +441,12 @@ class _GunCabinetScreenState extends State<GunCabinetScreen> {
         faultNote: fault,
         // 编辑档案不丢发数：2.2.0 起档案编辑曾把 rounds 重置为 0，此处保住原值。
         rounds: existing?.rounds ?? 0,
+        nickname: nickname,
+        serial: serial,
+        purchaseNotes: purchaseNotes,
+        configuration: configuration,
+        maintEveryRounds: everyRounds <= 0 ? 500 : everyRounds,
+        maintEveryDays: everyDays <= 0 ? 90 : everyDays,
       ));
     });
     _saveProfiles();

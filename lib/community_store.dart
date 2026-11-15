@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'i18n.dart';
+import 'tool_logic.dart';
 import 'score_grade.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -12,19 +13,14 @@ import 'package:flutter/services.dart';
 /// 注意：验证码注册、密码找回、鉴权 Token、设备管理、APP 推送这些能力
 /// 必须有后端和服务商才成立，本机版不做假流程。
 
-/// 板块：帖子分类。现有 5 个打底，再按图鉴/配件/复装/名枪四个模块补 6 个。
+/// Boards for the shooting tool. Older posts keep their original board id.
 const communityBoards = [
-  '综合',
-  '晒枪',
-  '复装心得',
-  '求助问答',
-  '资讯',
-  '枪械评测',
-  '新手入门',
-  '配件分享',
-  '射击技巧',
-  '历史名枪',
-  '靶场日记',
+  '靶场记录',
+  '练习里程碑',
+  '装备配置',
+  '保养交流',
+  '手册装药',
+  '勋章交换',
 ];
 
 /// 本机敏感词库：命中不拦截，自动替换为等长星号。
@@ -1699,6 +1695,9 @@ class CommunityStore extends ChangeNotifier {
       return tr('store_err_muted');
     }
     if (disabledBoards.contains(board)) return tr('store_err_board_closed');
+    if (communityPostBlockReason(title, content) != null) {
+      return tr('community_rule_blocked');
+    }
     final maskedTitle = maskSensitiveWords(title);
     final maskedContent = maskSensitiveWords(content);
     final post = CommunityPost(
@@ -1780,6 +1779,9 @@ class CommunityStore extends ChangeNotifier {
     if (me == null) return tr('store_err_not_logged');
     if (!me.isFounder && me.status == 'banned') return tr('store_err_banned');
     if (!me.isFounder && me.mutedEffective) return tr('store_err_muted');
+    if (communityPostBlockReason('', content) != null) {
+      return tr('community_rule_blocked');
+    }
     final masked = maskSensitiveWords(content);
     post.comments.add(CommunityComment(
       id: _nextId(),
@@ -1981,9 +1983,12 @@ class CommunityStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  void sendDm(String toId, String content) {
+  String? sendDm(String toId, String content) {
     final me = current;
-    if (me == null) return;
+    if (me == null) return tr('store_err_not_logged');
+    if (communityPostBlockReason('', content) != null) {
+      return tr('community_rule_blocked');
+    }
     final masked = maskSensitiveWords(content);
     dms.add(DirectMessage(
       id: _nextId(),
@@ -1999,6 +2004,7 @@ class CommunityStore extends ChangeNotifier {
       body: '${me.nickname}' + tr('notif_dm_sep') + masked.trim(),
     );
     notifyListeners();
+    return null;
   }
 
   void _notify({

@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
-import '../community_store.dart';
+
 import '../data.dart';
-import '../gun_cabinet_data.dart';
+import '../directory_taxonomy.dart';
 import '../english_terms.dart';
+import '../gun_cabinet_data.dart';
 import '../haptics.dart';
 import '../i18n.dart';
 import '../models.dart';
-import '../widgets/category_silhouette.dart';
 import '../widgets/app_top_bar.dart';
-import 'gun_cabinet_screen.dart';
-import '../news_data.dart';
-import 'news_screen.dart';
-import 'gun_list_screen.dart';
 import 'gun_detail_screen.dart';
-import 'legend_list_screen.dart';
+import 'gun_list_screen.dart';
+import 'news_screen.dart';
 
+/// Firearms Directory: find a type, then open a tool-oriented detail page.
 class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key});
 
@@ -25,8 +23,47 @@ class CatalogScreen extends StatefulWidget {
 class _CatalogScreenState extends State<CatalogScreen> {
   String _query = '';
   bool _searchExpanded = false;
-  // 搜索结果的品类筛选；null 表示全部。
-  String? _filterCategory;
+  String? _type;
+  String? _action;
+  String? _use;
+  String? _family;
+  bool _rimfire = false;
+
+  bool _matches(Gun g) {
+    if (_type != null && !firearmTypeIds(g).contains(_type)) return false;
+    if (_rimfire && !isRimfireGun(g)) return false;
+    if (_action != null && actionFamily(g) != _action) return false;
+    if (_use != null && !firearmUseIds(g).contains(_use)) return false;
+    if (_family != null && !caliberFamilyMatch(g, _family!)) return false;
+    final q = _query.trim().toLowerCase();
+    if (q.isEmpty) return true;
+    return g.name.toLowerCase().contains(q) ||
+        (g.nameEn ?? '').toLowerCase().contains(q) ||
+        g.vendor.toLowerCase().contains(q) ||
+        g.caliber.toLowerCase().contains(q) ||
+        g.action.toLowerCase().contains(q) ||
+        categoryMatches(g.category, q);
+  }
+
+  bool get _filtering =>
+      _query.trim().isNotEmpty ||
+      _type != null ||
+      _action != null ||
+      _use != null ||
+      _family != null ||
+      _rimfire;
+
+  void _clear() {
+    setState(() {
+      _type = null;
+      _action = null;
+      _use = null;
+      _family = null;
+      _rimfire = false;
+      _query = '';
+      _searchExpanded = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,34 +72,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
     final bronze = dark ? const Color(0xFFC9A86A) : const Color(0xFF6B5B3E);
     final ink = dark ? const Color(0xFFEDE8DF) : const Color(0xFF2E2A24);
     final cardBg = dark ? const Color(0xFF0D0D0D) : Colors.white;
-    final q = _query.trim().toLowerCase();
-    final results = q.isEmpty
-        ? <Gun>[]
-        : guns
-            .where((g) =>
-                g.name.toLowerCase().contains(q) ||
-                (g.nameEn ?? '').toLowerCase().contains(q) ||
-                g.vendor.toLowerCase().contains(q) ||
-                g.caliber.toLowerCase().contains(q) ||
-                // 第 10 项：品类中英文都要命中。
-                categoryMatches(g.category, q))
-            .toList();
-    // 搜索结果可按品类再筛一层：只列出结果里实际出现的品类。
-    final resultCategories = <String>[];
-    for (final g in results) {
-      if (!resultCategories.contains(g.category)) resultCategories.add(g.category);
-    }
-    final filtered = _filterCategory == null
-        ? results
-        : results.where((g) => g.category == _filterCategory).toList();
-    // 首页枪柜模块：优先读枪柜内存镜像（枪柜页/迁移同步），
-    // 尚未加载时回落旧收藏快照（迁移前的冻结数据，统一映射成档案）。
-    final myGuns = cabinetProfilesCache ??
-        communityStore.current?.collection
-            .where((c) => c.kind == 'gun' && c.status == 'owned')
-            .map((c) => GunProfile(gunName: c.gunName, rounds: c.rounds))
-            .toList() ??
-        [];
+    final results = guns.where(_matches).toList();
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
@@ -73,349 +83,136 @@ class _CatalogScreenState extends State<CatalogScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8 + kToolbarHeight, 16, 110),
           children: [
-            // 枪械资讯入口：页头太空，补一条厂商与弹药商资讯快讯；搜索时隐藏。
-            if (_query.isEmpty)
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: () {
-                    tapHaptic();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const NewsScreen()),
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: bronze,
-                          ),
-                          child: Icon(Icons.newspaper_outlined,
-                              size: 20,
-                              color: dark
-                                  ? const Color(0xFF000000)
-                                  : Colors.white),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(tr('news_title'),
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14)),
-                              const SizedBox(height: 2),
-                              Text(
-                                newsItems.first.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    color: grey, fontSize: 12),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Icon(Icons.chevron_right, color: grey),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            if (_query.isEmpty && myGuns.isNotEmpty)
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
+            Row(
+              children: [
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Text(tr('cab_title'),
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 14)),
-                          const Spacer(),
-                          GestureDetector(
-                            onTap: () {
-                              tapHaptic();
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) =>
-                                        const GunCabinetScreen()),
-                              );
-                            },
-                            child: Text(tr('catalog_view_all'),
-                                style: TextStyle(color: grey, fontSize: 12)),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      for (final c in myGuns.take(3))
-                        InkWell(
-                          onTap: () {
-                            final match = guns.where(
-                                (g) => g.name == c.gunName);
-                            if (match.isEmpty) return;
-                            tapHaptic();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) =>
-                                      GunDetailScreen(gun: match.first)),
-                            );
-                          },
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                      // 档案里没有口径，按枪名回查图鉴；查不到只显示枪名。
-                                      guns
-                                              .where((g) =>
-                                                  g.name == c.gunName)
-                                              .isEmpty
-                                          ? c.gunName
-                                          : '${c.gunName} · ${guns.firstWhere((g) => g.name == c.gunName).caliber}',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 13)),
-                                ),
-                                Text(tr('cab_rounds') + ' ${c.rounds} ' + tr('cab_rounds_suffix'),
-                                    style: TextStyle(
-                                        color: grey, fontSize: 12)),
-                              ],
-                            ),
-                          ),
-                        ),
+                      Text(tr('dir_title'),
+                          style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: ink)),
+                      Text(tr('dir_sub'),
+                          style: TextStyle(color: grey, fontSize: 12)),
                     ],
                   ),
                 ),
-              ),
-            const SizedBox(height: 12),
-            // 搜索：平时只显示一个放大镜圆钮，点开才展开成输入框；
-            // 收起时清空搜索，避免看不见的筛选条件留在后台。
-            if (!_searchExpanded)
-              Row(
-                children: [
-                  Text(tr('tab_catalog'),
-                      style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: ink)),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () => setState(() => _searchExpanded = true),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: cardBg,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.06),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Icon(Icons.search, color: bronze, size: 22),
+                GestureDetector(
+                  onTap: () => setState(() {
+                    _searchExpanded = !_searchExpanded;
+                    if (!_searchExpanded) _query = '';
+                  }),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: cardBg,
                     ),
-                  ),
-                ],
-              )
-            else
-              // 展开后是无边输入框：不套卡片底与阴影，不带放大镜前缀，
-              // 只留提示文字与光标；收起仍用右边圆钮。
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      autofocus: true,
-                      // TextField 本身任何状态都不画框：focusedBorder 不写会
-                      // 回落全局主题的橙色聚焦边，聚焦时裸输入框里会再冒出
-                      // 一个橙色框。
-                      decoration: InputDecoration(
-                        hintText: tr('search_gun_hint'),
-                        hintStyle: TextStyle(color: grey),
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        disabledBorder: InputBorder.none,
-                        errorBorder: InputBorder.none,
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      onChanged: (v) => setState(() {
-                        _query = v;
-                        _filterCategory = null;
-                      }),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () => setState(() {
-                      _searchExpanded = false;
-                      _query = '';
-                      _filterCategory = null;
-                    }),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: cardBg,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.06),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Icon(Icons.close, color: grey, size: 20),
-                    ),
-                  ),
-                ],
-              ),
-            const SizedBox(height: 20),
-            if (_query.isNotEmpty) ...[
-              Text(
-                  tr('catalog_total_prefix') +
-                      '${filtered.length}' +
-                      tr('catalog_total_suffix_guns'),
-                  style: TextStyle(color: grey, fontSize: 13)),
-              if (resultCategories.length > 1) ...[
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 34,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      _categoryChip(
-                          null, tr('range_filter_all'), bronze, grey, cardBg),
-                      for (final c in resultCategories)
-                        _categoryChip(c, categoryDisplay(c), bronze, grey,
-                            cardBg),
-                    ],
+                    child: Icon(_searchExpanded ? Icons.close : Icons.search,
+                        color: bronze, size: 22),
                   ),
                 ),
               ],
-              const SizedBox(height: 12),
-              ...filtered.map((g) => Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: ListTile(
-                      title: Text(gunDisplayName(g)),
-                      subtitle: Text('${vendorDisplay(g.vendor)} · ${g.caliber}'),
-                      onTap: () {
-                        tapHaptic();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => GunDetailScreen(gun: g)),
-                        );
-                      },
-                    ),
-                  )),
-              if (results.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 24),
-                  child: Center(
-                    child: Text(tr('catalog_search_empty'),
-                        style: TextStyle(color: grey)),
-                  ),
+            ),
+            if (_searchExpanded) ...[
+              TextField(
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: tr('search_gun_hint'),
+                  hintStyle: TextStyle(color: grey),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
                 ),
+                onChanged: (v) => setState(() => _query = v),
+              ),
             ],
-            if (_query.isEmpty) ...[
-              Text(tr('gun_categories'),
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: ink)),
-              const SizedBox(height: 12),
+            const SizedBox(height: 8),
+            _chipRow(
+              label: tr('dir_action'),
+              ids: actionFamilyIds,
+              selected: _action,
+              text: (id) => tr('act_$id'),
+              onPick: (id) => setState(() => _action = _action == id ? null : id),
+              bronze: bronze,
+              grey: grey,
+              cardBg: cardBg,
+            ),
+            _chipRow(
+              label: tr('dir_use'),
+              ids: useCaseIds,
+              selected: _use,
+              text: (id) => tr('use_$id'),
+              onPick: (id) => setState(() => _use = _use == id ? null : id),
+              bronze: bronze,
+              grey: grey,
+              cardBg: cardBg,
+            ),
+            _chipRow(
+              label: tr('dir_caliber'),
+              ids: caliberFamilyIds,
+              selected: _family,
+              text: (id) => tr('fam_$id'),
+              onPick: (id) =>
+                  setState(() => _family = _family == id ? null : id),
+              bronze: bronze,
+              grey: grey,
+              cardBg: cardBg,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                FilterChip(
+                  label: Text(tr('dir_rimfire')),
+                  selected: _rimfire,
+                  onSelected: (v) => setState(() => _rimfire = v),
+                ),
+                const SizedBox(width: 8),
+                if (_filtering)
+                  TextButton(onPressed: _clear, child: Text(tr('dir_clear'))),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (!_filtering) ...[
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.95,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
+                  childAspectRatio: 2.3,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
                 ),
-                itemCount: categories.length,
+                itemCount: directoryTypeIds.length,
                 itemBuilder: (context, i) {
-                  final c = categories[i];
-                  final count = guns.where((g) => g.category == c).length;
+                  final id = directoryTypeIds[i];
+                  final count =
+                      guns.where((g) => firearmTypeIds(g).contains(id)).length;
                   return GestureDetector(
                     onTap: () {
                       tapHaptic();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => GunListScreen(category: c)),
-                      );
+                      setState(() => _type = id);
                     },
                     child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
                         color: cardBg,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      padding: const EdgeInsets.all(14),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // 品类图：固定高度 + contain 全枪可见、居中摆放。
-                          // cover 会裁掉枪身两端（之前显示不全就是它造成的），
-                          // 透明底抠图用 contain 才能保证整枪可见且位置统一。
-                          SizedBox(
-                            height: 76,
-                            width: double.infinity,
-                            child: Image.asset(
-                              categoryPhoto[c] ??
-                                  'assets/images/category-rifle.png',
-                              fit: BoxFit.contain,
-                              alignment: Alignment.center,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(categoryDisplay(c),
-                              maxLines: 1,
+                          Text(tr('type_$id'),
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                  color: ink)),
-                          const SizedBox(height: 2),
-                          Text(countText(count),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                                  fontWeight: FontWeight.bold, color: ink)),
+                          Text('$count',
                               style: TextStyle(color: grey, fontSize: 12)),
                         ],
                       ),
@@ -423,107 +220,115 @@ class _CatalogScreenState extends State<CatalogScreen> {
                   );
                 },
               ),
-              const SizedBox(height: 6),
-              Text(tr('catalog_img_credit'),
-                  style: TextStyle(color: grey, fontSize: 11)),
-              // 停售名枪鉴赏：首页下方的大类入口。
-              const SizedBox(height: 24),
-              Text(tr('legends'),
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: ink)),
-              const SizedBox(height: 4),
-              Text(tr('catalog_legends_sub'),
-                  style: TextStyle(color: grey, fontSize: 13)),
               const SizedBox(height: 12),
-              GestureDetector(
-                onTap: () {
-                  tapHaptic();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const LegendListScreen()),
-                  );
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: cardBg,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(tr('catalog_enter_legends'),
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: ink)),
-                            const SizedBox(height: 4),
-                            Text(
-                                'M1 加兰德、Kar98k、STG44、汤普森……' + tr('catalog_total_prefix') + '${legends.length}' + tr('catalog_total_suffix_guns'),
-                                style:
-                                    TextStyle(color: grey, fontSize: 13)),
-                          ],
-                        ),
-                      ),
-                      Icon(Icons.chevron_right, color: grey),
-                    ],
-                  ),
+              Wrap(
+                spacing: 8,
+                children: [
+                  for (final c in categories)
+                    ActionChip(
+                      label: Text(categoryDisplay(c)),
+                      onPressed: () {
+                        tapHaptic();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => GunListScreen(category: c)),
+                        );
+                      },
+                    ),
+                ],
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const NewsScreen())),
+                  child: Text(tr('news_title')),
                 ),
               ),
+            ] else ...[
+              Text('${results.length}',
+                  style: TextStyle(color: grey, fontSize: 13)),
+              if (results.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 24),
+                  child: Text(tr('dir_empty'),
+                      style: TextStyle(color: grey)),
+                ),
+              for (final g in results.take(80))
+                Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    title: Text(gunDisplayName(g)),
+                    subtitle: Text(
+                        '${vendorDisplay(g.vendor)} · ${g.caliber} · ${actionDisplay(g.action)}'),
+                    onTap: () {
+                      tapHaptic();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => GunDetailScreen(gun: g)),
+                      );
+                    },
+                  ),
+                ),
+              if (results.length > 80)
+                Text(tr('dir_more'), style: TextStyle(color: grey, fontSize: 12)),
             ],
+            if (cabinetProfilesCache != null &&
+                cabinetProfilesCache!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                    '${tr('cab_title')} · ${cabinetProfilesCache!.length}',
+                    style: TextStyle(color: grey, fontSize: 12)),
+              ),
           ],
         ),
       ),
     );
   }
 
-  /// 搜索结果上方的品类筛选小药丸：选中为铜色底，未选中为卡片底色。
-  Widget _categoryChip(String? value, String label, Color bronze, Color grey,
-      Color cardBg) {
-    final selected = _filterCategory == value;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: GestureDetector(
-        onTap: () {
-          tapHaptic();
-          setState(() => _filterCategory = value);
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: selected ? bronze : cardBg,
-            borderRadius: BorderRadius.circular(17),
-            border: Border.all(
-                color: selected ? bronze : grey.withValues(alpha: 0.25)),
+  Widget _chipRow({
+    required String label,
+    required List<String> ids,
+    required String? selected,
+    required String Function(String) text,
+    required ValueChanged<String> onPick,
+    required Color bronze,
+    required Color grey,
+    required Color cardBg,
+  }) {
+    return SizedBox(
+      height: 36,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Center(
+                child: Text(label, style: TextStyle(color: grey, fontSize: 12))),
           ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              color: selected
-                  ? (Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFF000000)
-                      : Colors.white)
-                  : grey,
-              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+          for (final id in ids)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: GestureDetector(
+                onTap: () => onPick(id),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: selected == id ? bronze : cardBg,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(text(id),
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: selected == id ? Colors.black : grey)),
+                ),
+              ),
             ),
-          ),
-        ),
+        ],
       ),
     );
   }

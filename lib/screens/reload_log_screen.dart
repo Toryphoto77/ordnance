@@ -1028,7 +1028,7 @@ class _ReloadLogScreenState extends State<ReloadLogScreen> {
           Text(tr('log_title'),
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text('按步骤打勾，全部完成才能记一条；记录保存在本机，重启不丢。Tick off the SOP steps; all must be complete before a record can be released. Records stay on this device.',
+          Text(tr('load_caution'),
               style: TextStyle(color: grey, fontSize: 12)),
           const SizedBox(height: 8),
           Text(tr('log_steps'),

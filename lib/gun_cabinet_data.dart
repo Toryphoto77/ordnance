@@ -98,6 +98,13 @@ class GunProfile {
   String maintenanceNote; // '' = 未填
   String faultNote; // '' = 未填
   int rounds; // 2.2.5 起自有发数（由旧收藏迁移而来，缺失默认 0）
+  String nickname;
+  String serial;
+  String purchaseNotes;
+  String configuration;
+  /// 0 means "use the app default" (500 rounds / 90 days).
+  int maintEveryRounds;
+  int maintEveryDays;
 
   GunProfile({
     required this.gunName,
@@ -107,6 +114,12 @@ class GunProfile {
     this.maintenanceNote = '',
     this.faultNote = '',
     this.rounds = 0,
+    this.nickname = '',
+    this.serial = '',
+    this.purchaseNotes = '',
+    this.configuration = '',
+    this.maintEveryRounds = 500,
+    this.maintEveryDays = 90,
   });
 
   Map<String, dynamic> toJson() => {
@@ -117,6 +130,12 @@ class GunProfile {
         'maintenanceNote': maintenanceNote,
         'faultNote': faultNote,
         'rounds': rounds,
+        'nickname': nickname,
+        'serial': serial,
+        'purchaseNotes': purchaseNotes,
+        'configuration': configuration,
+        'maintEveryRounds': maintEveryRounds,
+        'maintEveryDays': maintEveryDays,
       };
 
   factory GunProfile.fromJson(Map<String, dynamic> j) => GunProfile(
@@ -127,6 +146,12 @@ class GunProfile {
         maintenanceNote: j['maintenanceNote'] as String? ?? '',
         faultNote: j['faultNote'] as String? ?? '',
         rounds: (j['rounds'] as num?)?.toInt() ?? 0,
+        nickname: j['nickname'] as String? ?? '',
+        serial: j['serial'] as String? ?? '',
+        purchaseNotes: j['purchaseNotes'] as String? ?? '',
+        configuration: j['configuration'] as String? ?? '',
+        maintEveryRounds: (j['maintEveryRounds'] as num?)?.toInt() ?? 500,
+        maintEveryDays: (j['maintEveryDays'] as num?)?.toInt() ?? 90,
       );
 }
 

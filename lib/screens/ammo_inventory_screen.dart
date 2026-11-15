@@ -30,6 +30,10 @@ class AmmoItem {
   int lowAt;
   String location;
   String batchNo;
+  String manufacturer;
+  String intendedGun;
+  String storageClimate;
+  String lot;
   AmmoItem(
       {required this.caliber,
       required this.name,
@@ -39,7 +43,11 @@ class AmmoItem {
       this.roundsPerBox = 50,
       this.lowAt = -1,
       this.location = '',
-      this.batchNo = ''});
+      this.batchNo = '',
+      this.manufacturer = '',
+      this.intendedGun = '',
+      this.storageClimate = '',
+      this.lot = ''});
 
   Map<String, dynamic> toJson() => {
         'caliber': caliber,
@@ -51,6 +59,10 @@ class AmmoItem {
         'lowAt': lowAt,
         'location': location,
         'batchNo': batchNo,
+        'manufacturer': manufacturer,
+        'intendedGun': intendedGun,
+        'storageClimate': storageClimate,
+        'lot': lot.isEmpty ? batchNo : lot,
       };
 
   factory AmmoItem.fromJson(Map<String, dynamic> j) => AmmoItem(
@@ -63,6 +75,12 @@ class AmmoItem {
         lowAt: (j['lowAt'] as num?)?.toInt() ?? -1,
         location: j['location'] as String? ?? '',
         batchNo: j['batchNo'] as String? ?? '',
+        manufacturer: j['manufacturer'] as String? ?? '',
+        intendedGun: j['intendedGun'] as String? ?? '',
+        storageClimate: j['storageClimate'] as String? ?? '',
+        lot: (j['lot'] as String?)?.isNotEmpty == true
+            ? j['lot'] as String
+            : (j['batchNo'] as String? ?? ''),
       );
 
   bool get isLow => lowAt >= 0 && quantity < lowAt;
@@ -254,6 +272,9 @@ class _AmmoInventoryScreenState extends State<AmmoInventoryScreen> {
   final _lowCtrl = TextEditingController();
   final _locationCtrl = TextEditingController();
   final _batchCtrl = TextEditingController();
+  final _mfrCtrl = TextEditingController();
+  final _intendedCtrl = TextEditingController();
+  final _climateCtrl = TextEditingController();
   String _caliber = _manualCaliber;
   String _kind = '厂弹';
   final _prices = <String, double>{};
@@ -278,6 +299,9 @@ class _AmmoInventoryScreenState extends State<AmmoInventoryScreen> {
     _lowCtrl.dispose();
     _locationCtrl.dispose();
     _batchCtrl.dispose();
+    _mfrCtrl.dispose();
+    _intendedCtrl.dispose();
+    _climateCtrl.dispose();
     _priceCtrl.dispose();
     super.dispose();
   }
@@ -336,13 +360,20 @@ class _AmmoInventoryScreenState extends State<AmmoInventoryScreen> {
           roundsPerBox: box < 0 ? 0 : box,
           lowAt: low,
           location: _locationCtrl.text.trim(),
-          batchNo: _kind == '复装' ? _batchCtrl.text.trim() : ''));
+          batchNo: _batchCtrl.text.trim(),
+          manufacturer: _mfrCtrl.text.trim(),
+          intendedGun: _intendedCtrl.text.trim(),
+          storageClimate: _climateCtrl.text.trim(),
+          lot: _batchCtrl.text.trim()));
       _nameCtrl.clear();
       _qtyCtrl.clear();
       _noteCtrl.clear();
       _lowCtrl.clear();
       _locationCtrl.clear();
       _batchCtrl.clear();
+      _mfrCtrl.clear();
+      _intendedCtrl.clear();
+      _climateCtrl.clear();
     });
     _save();
   }
@@ -892,6 +923,14 @@ class _AmmoInventoryScreenState extends State<AmmoInventoryScreen> {
               controller: _nameCtrl,
               decoration: InputDecoration(
                   labelText: tr('ammo_name_hint'))),
+          const SizedBox(height: 8),
+          TextField(
+              controller: _mfrCtrl,
+              decoration: InputDecoration(labelText: tr('ammo_mfr'))),
+          const SizedBox(height: 8),
+          TextField(
+              controller: _intendedCtrl,
+              decoration: InputDecoration(labelText: tr('ammo_intended'))),
           if (_bulletChips(_resolvedCaliber).isNotEmpty) ...[
             const SizedBox(height: 6),
             Wrap(
@@ -916,13 +955,10 @@ class _AmmoInventoryScreenState extends State<AmmoInventoryScreen> {
                     ))
                 .toList(),
           ),
-          if (_kind == '复装') ...[
-            const SizedBox(height: 8),
-            TextField(
-                controller: _batchCtrl,
-                decoration: InputDecoration(
-                    labelText: tr('ammo_batch_label'))),
-          ],
+          const SizedBox(height: 8),
+          TextField(
+              controller: _batchCtrl,
+              decoration: InputDecoration(labelText: tr('ammo_lot'))),
           const SizedBox(height: 8),
           TextField(
               controller: _qtyCtrl,
@@ -945,6 +981,10 @@ class _AmmoInventoryScreenState extends State<AmmoInventoryScreen> {
               controller: _locationCtrl,
               decoration:
                   InputDecoration(labelText: tr('ammo_location_label'))),
+          const SizedBox(height: 8),
+          TextField(
+              controller: _climateCtrl,
+              decoration: InputDecoration(labelText: tr('ammo_climate'))),
           const SizedBox(height: 8),
           TextField(
               controller: _noteCtrl,

@@ -28,7 +28,7 @@ class _CommunityComposeScreenState extends State<CommunityComposeScreen> {
   static const _pickImageChannel = MethodChannel('gunsmap/pick_image');
   late final TextEditingController _titleCtrl;
   late final TextEditingController _contentCtrl;
-  String _board = '综合';
+  String _board = '靶场记录';
   final _images = <Uint8List>[];
   // 附件（不进草稿）：定位文字、天气快照文字、视频沙盒路径。
   String _location = '';
@@ -672,7 +672,7 @@ class _CommunityComposeScreenState extends State<CommunityComposeScreen> {
                       setState(() {
                         _titleCtrl.clear();
                         _contentCtrl.clear();
-                        _board = '综合';
+                        _board = '靶场记录';
                         _images.clear();
                         _location = '';
                         _weather = '';
