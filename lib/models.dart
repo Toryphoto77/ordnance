@@ -108,6 +108,8 @@ class Gun {
   /// 如 twist '1:10"'、twistDir '右旋'。
   final String twist;
   final String twistDir;
+  /// Public source for this entry. Empty when the row predates source notes.
+  final String source;
 
   const Gun({
     required this.name,
@@ -131,6 +133,7 @@ class Gun {
     this.caliberOptions = const [],
     this.twist = '',
     this.twistDir = '',
+    this.source = '',
   });
 }
 

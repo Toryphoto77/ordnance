@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../ballistic_store.dart';
+import '../gun_cabinet_data.dart';
 import '../gun_setup_data.dart';
 import '../data.dart';
 import '../english_terms.dart';
@@ -10,8 +11,10 @@ import '../widgets/app_toast.dart';
 import '../widgets/parametric_silhouette.dart';
 import '../widgets/family_diagram.dart';
 import '../widgets/app_top_bar.dart';
+import 'ammo_inventory_screen.dart';
 import 'gun_compare_screen.dart';
 import 'dope_screen.dart';
+import 'maintenance_screen.dart';
 
 class GunDetailScreen extends StatefulWidget {
   final Gun gun;
@@ -101,6 +104,18 @@ class _GunDetailScreenState extends State<GunDetailScreen> {
         (tr('detail_hot_trigger'), tr('detail_hot_trigger_desc'), 0.55, 0.55),
         (tr('detail_hot_stock'), tr('detail_hot_stock_desc'), 0.88, 0.45),
       ];
+
+  Future<void> _addToArmory(Gun gun) async {
+    final profiles = await loadGunProfiles();
+    if (profiles.any((p) => p.gunName == gun.name)) {
+      if (mounted) showAppToast(context, tr('armory_already'));
+      return;
+    }
+    profiles.add(GunProfile(gunName: gun.name));
+    await saveGunProfiles(profiles);
+    cabinetProfilesCache = profiles;
+    if (mounted) showAppToast(context, tr('armory_added'));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -230,6 +245,37 @@ class _GunDetailScreenState extends State<GunDetailScreen> {
               padding: const EdgeInsets.only(top: 4),
               child: Text(tr('detail_price_prefix') + '${gun.price}' + tr('detail_price_suffix'),
                   style: const TextStyle(color: Colors.grey, fontSize: 14)),
+            ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton(
+                onPressed: () => _addToArmory(gun),
+                child: Text(tr('detail_add_armory')),
+              ),
+              OutlinedButton(
+                onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const MaintenanceScreen())),
+                child: Text(tr('detail_maint')),
+              ),
+              OutlinedButton(
+                onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const AmmoInventoryScreen())),
+                child: Text(tr('detail_ammo')),
+              ),
+            ],
+          ),
+          if (gun.source.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text('${tr('detail_source')}${gun.source}',
+                  style: const TextStyle(color: Colors.grey, fontSize: 12)),
             ),
           const SizedBox(height: 12),
           Text(tr('params'),

@@ -12,6 +12,10 @@ import '../system_actions.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/glass_dialog.dart';
 import '../community_store.dart';
+import '../gun_cabinet_data.dart';
+import '../range_session.dart';
+import '../tool_transfer.dart';
+import 'ammo_inventory_screen.dart';
 import 'about_screen.dart';
 import 'theme_screen.dart';
 import 'app_log_screen.dart';
@@ -259,6 +263,16 @@ class SettingsScreen extends StatelessWidget {
         throw const FormatException();
       }
       added = communityStore.importLegacyExport(decoded);
+      if (decoded['app'] == 'Ordnance') {
+        final tools = await mergeToolPayload(decoded);
+        if (added == -2 && tools > 0) {
+          if (context.mounted) {
+            showAppToast(context, tr('settings_import_tools'));
+          }
+          return;
+        }
+        if (added >= 0) added += tools;
+      }
     } catch (_) {
       if (context.mounted) showAppToast(context, tr('settings_import_bad'));
       return;
@@ -277,24 +291,27 @@ class SettingsScreen extends StatelessWidget {
   /// 导出我的数据：与快捷操作面板里的“导出我的数据”共用同一份逻辑。
   Future<void> _exportData(BuildContext context) async {
     final me = communityStore.current;
-    if (me == null) {
-      showAppToast(context, tr('settings_login_export'));
-      return;
-    }
+    final profiles = await loadGunProfiles();
+    final ammo = await loadAmmoItems();
+    final sessions = await loadRangeSessions();
     final data = {
       'app': 'Ordnance',
       'version': appVersion,
       'exportedAt': DateTime.now().toIso8601String(),
-      'account': {
+      if (me != null) 'account': {
         'id': me.id,
         'nickname': me.nickname,
         'level': me.level,
         'totalXp': me.totalXp,
       },
-      'collection': me.collection.map((c) => c.toJson()).toList(),
-      'rangeScores': me.rangeScores.map((r) => r.toJson()).toList(),
-      'earnedMedals':
-          communityStore.earnedMedals(me).map((m) => m.id).toList(),
+      if (me != null) 'collection': me.collection.map((c) => c.toJson()).toList(),
+      if (me != null) 'rangeScores': me.rangeScores.map((r) => r.toJson()).toList(),
+      if (me != null)
+        'earnedMedals':
+            communityStore.earnedMedals(me).map((m) => m.id).toList(),
+      'gunProfiles': profiles.map((p) => p.toJson()).toList(),
+      'ammoItems': ammo.map((a) => a.toJson()).toList(),
+      'rangeSessions': sessions.map((s) => s.toJson()).toList(),
     };
     try {
       const share = MethodChannel('gunsmap/share');

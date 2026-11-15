@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../data.dart';
+import '../tool_logic.dart';
 import '../english_terms.dart';
 import '../haptics.dart';
 import '../i18n.dart';
@@ -547,12 +548,13 @@ class _ReloadWorkbenchScreenState extends State<ReloadWorkbenchScreen> {
         : reloadCalibers.where((c) => c.caliber == _caliber).toList();
     final caliberEntry =
         _caliberMatches.isEmpty ? null : _caliberMatches.first;
-    final loads = _caliber == null
+    final rawLoads = _caliber == null
         ? <ReloadLoad>[]
         : reloadLoads.where((l) => l.caliber == _caliber).toList();
+    final loads = rawLoads.where(reloadLoadIsCited).toList();
     final manuals = <String>{};
     for (final l in reloadLoads) {
-      if (l.manual.isNotEmpty) manuals.add(l.manual);
+      if (reloadLoadIsCited(l) && l.manual.isNotEmpty) manuals.add(l.manual);
     }
     final libQ = _libQuery.trim().toLowerCase();
     final libFiltered = reloadComponents.where((c) {
@@ -607,6 +609,15 @@ class _ReloadWorkbenchScreenState extends State<ReloadWorkbenchScreen> {
             const SizedBox(height: 8),
             Text(tr('reload_manual_loads'),
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            Text(tr('load_caution'),
+                style: TextStyle(color: grey, fontSize: 12)),
+            if (rawLoads.length != loads.length)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(tr('load_uncited_hidden'),
+                    style: TextStyle(color: grey, fontSize: 12)),
+              ),
             const SizedBox(height: 8),
             if (loads.isEmpty)
               Text(tr('reload_no_manual_data'),

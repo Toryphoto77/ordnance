@@ -6,12 +6,11 @@ import 'theme_accent.dart';
 import 'community_store.dart';
 import 'haptics.dart';
 import 'i18n.dart';
+import 'screens/ammo_hub_screen.dart';
 import 'screens/catalog_screen.dart';
-import 'screens/community_compose_screen.dart';
 import 'screens/community_screen.dart';
-import 'screens/my_screen.dart';
-import 'screens/tools_screen.dart';
-import 'widgets/app_toast.dart';
+import 'screens/gun_cabinet_screen.dart';
+import 'screens/range_home_screen.dart';
 import 'widgets/liquid_glass_nav.dart';
 import 'widgets/page_transitions.dart';
 
@@ -172,24 +171,12 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _index = 0;
 
-  /// 中间＋号发布（第 11 项）：未登录先提示登录，否则进发布页。
-  void _openComposer() {
-    if (communityStore.current == null) {
-      showAppToast(context, tr('login_required_body'));
-      return;
-    }
-    tapHaptic();
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const CommunityComposeScreen()),
-    );
-  }
-
   static const _tabs = [
+    (Icons.gps_fixed, Icons.gps_fixed, 'tab_range'),
+    (Icons.shield_outlined, Icons.shield, 'tab_armory'),
+    (Icons.inventory_2_outlined, Icons.inventory_2, 'tab_ammo'),
     (Icons.grid_view_rounded, Icons.grid_view_rounded, 'tab_catalog'),
     (Icons.forum_outlined, Icons.forum_rounded, 'tab_community'),
-    (Icons.handyman_outlined, Icons.handyman_rounded, 'tab_tools'),
-    (Icons.person_outlined, Icons.person_rounded, 'tab_mine'),
   ];
 
   @override
@@ -200,10 +187,11 @@ class _HomePageState extends State<HomePage> {
     // 页面每次构建时新建实例（不用 const），语言切换时当前页才能重译；
     // 元素复用保证 State 不丢，社区当次数据不会因切语言清空。
     final pages = [
+      RangeHomeScreen(),
+      GunCabinetScreen(),
+      AmmoHubScreen(),
       CatalogScreen(),
       CommunityScreen(),
-      ToolsScreen(),
-      MyScreen(),
     ];
     // 语言切换时重建导航（含底部 Tab 文案）；各页内部另有自己的语言监听。
     return ValueListenableBuilder<String>(
@@ -251,7 +239,6 @@ class _HomePageState extends State<HomePage> {
                       tapHaptic();
                       setState(() => _index = i);
                     },
-                    onCompose: _openComposer,
                   ),
                 ),
               ),
@@ -269,9 +256,7 @@ class _HomePageState extends State<HomePage> {
 class _FloatingNavBar extends StatelessWidget {
   final int index;
   final ValueChanged<int> onTap;
-  final VoidCallback onCompose;
-  const _FloatingNavBar(
-      {required this.index, required this.onTap, required this.onCompose});
+  const _FloatingNavBar({required this.index, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -290,7 +275,7 @@ class _FloatingNavBar extends StatelessWidget {
             child: Stack(
               children: [
                 Container(
-                  height: 68,
+                  height: 74,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
@@ -319,39 +304,18 @@ class _FloatingNavBar extends StatelessWidget {
                       ),
                     ],
                   ),
-                  // 5 槽：图鉴 / 社区 / 中间＋号（与旁边 Tab 同款的
-                  // 素图标，无底色无阴影）/ 工具 / 我的；槽位与页下标
-                  // 的映射：0、1、3、4。
                   child: Row(
                     children: [
-                      for (var slot = 0; slot < 5; slot++)
-                        if (slot == 2)
-                          SizedBox(
-                            width: 56,
-                            child: Center(
-                              child: GestureDetector(
-                                onTap: onCompose,
-                                behavior: HitTestBehavior.opaque,
-                                child: Icon(
-                                  Icons.add,
-                                  size: 26,
-                                  color: dark
-                                      ? const Color(0xFF8A8578)
-                                      : const Color(0xFF9A917F),
-                                ),
-                              ),
-                            ),
-                          )
-                        else
-                          Expanded(child: _NavItem(
-                            icon: _HomePageState
-                                ._tabs[slot < 2 ? slot : slot - 1].$1,
-                            activeIcon: _HomePageState
-                                ._tabs[slot < 2 ? slot : slot - 1].$2,
-                            selected: index == (slot < 2 ? slot : slot - 1),
-                            onTap: () =>
-                                onTap(slot < 2 ? slot : slot - 1),
-                          )),
+                      for (var slot = 0; slot < _HomePageState._tabs.length; slot++)
+                        Expanded(
+                          child: _NavItem(
+                            icon: _HomePageState._tabs[slot].$1,
+                            activeIcon: _HomePageState._tabs[slot].$2,
+                            label: tr(_HomePageState._tabs[slot].$3),
+                            selected: index == slot,
+                            onTap: () => onTap(slot),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -366,11 +330,13 @@ class _FloatingNavBar extends StatelessWidget {
 class _NavItem extends StatelessWidget {
   final IconData icon;
   final IconData activeIcon;
+  final String label;
   final bool selected;
   final VoidCallback onTap;
   const _NavItem({
     required this.icon,
     required this.activeIcon,
+    required this.label,
     required this.selected,
     required this.onTap,
   });
@@ -395,12 +361,28 @@ class _NavItem extends StatelessWidget {
                 color: selected ? pill : Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Icon(
-                selected ? activeIcon : icon,
-                size: 26,
-                color: selected
-                    ? (dark ? const Color(0xFF000000) : Colors.white)
-                    : grey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    selected ? activeIcon : icon,
+                    size: 22,
+                    color: selected
+                        ? (dark ? const Color(0xFF000000) : Colors.white)
+                        : grey,
+                  ),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: selected
+                          ? (dark ? const Color(0xFF000000) : Colors.white)
+                          : grey,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
