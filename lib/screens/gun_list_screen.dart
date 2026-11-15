@@ -69,13 +69,9 @@ class GunListScreen extends StatelessWidget {
                     style: const TextStyle(color: Color(0xFF9A917F))),
                 children: models
                     .map((g) => ListTile(
-                          leading: g.image != null
-                              ? Image.asset(g.image!,
-                                  width: 90, fit: BoxFit.contain)
-                              : const Icon(Icons.image_not_supported,
-                                  size: 36, color: Color(0xFF9A917F)),
                           title: Text(gunDisplayName(g)),
-                          subtitle: Text(g.caliber),
+                          subtitle: Text(
+                              '${vendorDisplay(g.vendor)} · ${g.caliber} · ${actionDisplay(g.action)}'),
                           onTap: () {
                             tapHaptic();
                             Navigator.push(

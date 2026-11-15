@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:firearms_catalog/app_version.dart';
 import 'package:firearms_catalog/data.dart';
-import 'package:firearms_catalog/widgets/category_silhouette.dart';
 
 /// 数据与资源自检：图鉴数据、图标资源与版本号是本项目最容易悄悄坏掉的地方，
 /// 这里用测试兜住——以后加数据或换资源，跑一遍就知道有没有漏。
@@ -46,17 +45,8 @@ void main() {
       expect(missing, isEmpty, reason: '缺失图片：$missing');
     });
 
-    test('品类图与名枪照片都在', () {
-      final missing = <String>[
-        ...categoryPhoto.values.where((p) => !File(p).existsSync()),
-        ...legends
-            .map((l) => l.image)
-            .whereType<String>()
-            .where((p) => !File(p).existsSync()),
-        if (!File('assets/images/app-icon.png').existsSync())
-          'assets/images/app-icon.png',
-      ];
-      expect(missing, isEmpty, reason: '缺失图片：$missing');
+    test('应用图标仍在，目录不再依赖品类图', () {
+      expect(File('assets/images/app-icon.png').existsSync(), isTrue);
     });
 
     test('Manrope 四个字重都在', () {

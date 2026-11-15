@@ -102,9 +102,6 @@ class _CommunityBoardScreenState extends State<CommunityBoardScreen> {
                 .toList();
         final heat = boardPosts.fold<int>(
             0, (sum, p) => sum + p.likedBy.length + p.comments.length);
-        final latestWithImage = boardPosts
-            .where((p) => p.images.isNotEmpty)
-            .toList();
         final followed = me != null &&
             widget.board != '全部' &&
             me.followedBoards.contains(widget.board);
@@ -131,23 +128,6 @@ class _CommunityBoardScreenState extends State<CommunityBoardScreen> {
                   padding: const EdgeInsets.all(14),
                   child: Column(
                     children: [
-                      SizedBox(
-                        height: 72,
-                        width: double.infinity,
-                        child: latestWithImage.isNotEmpty
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.memory(
-                                  latestWithImage.first.images.first,
-                                  fit: BoxFit.cover,
-                                ),
-                              )
-                            : Image.asset(
-                                boardCover(widget.board),
-                                fit: BoxFit.contain,
-                              ),
-                      ),
-                      const SizedBox(height: 12),
                       Row(
                         children: [
                           Container(

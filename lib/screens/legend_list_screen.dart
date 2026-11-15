@@ -46,11 +46,6 @@ class LegendListScreen extends StatelessWidget {
             child: ListTile(
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              leading: l.image != null
-                  ? Image.asset(l.image!,
-                      width: 90, fit: BoxFit.contain)
-                  : const Icon(Icons.image_not_supported,
-                      size: 36, color: Color(0xFF9A917F)),
               title: Text(l.nameEn,
                   style: const TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text(

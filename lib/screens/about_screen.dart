@@ -1,6 +1,7 @@
 import 'dart:io';
 import '../i18n.dart';
 import '../data.dart';
+import '../tool_logic.dart';
 
 import 'package:flutter/material.dart';
 import '../widgets/app_toast.dart';
@@ -51,7 +52,7 @@ class AboutScreen extends StatelessWidget {
       ['${guns.length}', tr('about_data_guns')],
       ['${accessories.length}', tr('about_data_accessories')],
       ['${caliberInfos.length}', tr('about_data_calibers')],
-      ['${legends.length}', tr('about_data_legends')],
+      ['${citedReloadLoads(reloadLoads).length}', tr('loads_title')],
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
