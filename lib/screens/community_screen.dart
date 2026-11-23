@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../community_store.dart';
 import '../i18n.dart';
+import '../design/ordnance_tokens.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/community_theme.dart';
 import '../widgets/level_badge.dart';
@@ -116,27 +117,31 @@ class _CommunityScreenState extends State<CommunityScreen> {
   }
 
   Widget _segTab(String label, bool selected, VoidCallback onTap) {
-    const bronze = Color(0xFF6B5B3E);
+    final scheme = Theme.of(context).colorScheme;
     return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: selected ? bronze : Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-                color: selected
-                    ? bronze
-                    : Colors.grey.withValues(alpha: 0.4)),
-          ),
-          child: Center(
-            child: Text(label,
-                style: TextStyle(
-                    color: selected ? Colors.white : null,
-                    fontWeight:
-                        selected ? FontWeight.bold : FontWeight.normal)),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        decoration: BoxDecoration(
+          color: selected
+              ? scheme.primary.withValues(alpha: 0.16)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: selected ? scheme.primary : scheme.outline),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Center(
+              child: Text(label,
+                  style: TextStyle(
+                      color: selected ? scheme.primary : scheme.onSurface,
+                      fontWeight:
+                          selected ? FontWeight.w600 : FontWeight.w500)),
+            ),
           ),
         ),
       ),
@@ -448,75 +453,63 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   .length;
           final feed = _feedPosts(current);
           return Scaffold(
-            // 内层 Scaffold 不跟键盘走：键盘弹起时 body 不收缩，
-            // 右下角发帖钮（Positioned bottom: 100）不再跟着上移。
             resizeToAvoidBottomInset: false,
             extendBodyBehindAppBar: true,
-            appBar: const OrdnanceAppBar(),
+            appBar: OrdnanceAppBar(
+              title: tr('community_title'),
+              actions: [
+                IconButton(
+                  tooltip: tr('tab_mine'),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MyScreen()),
+                  ),
+                  icon: const Icon(Icons.person_outline),
+                ),
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    IconButton(
+                      tooltip: tr('my_dms'),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const CommunityDmScreen()),
+                      ),
+                      icon: const Icon(Icons.mail_outlined),
+                    ),
+                    if (unreadDm > 0)
+                      Positioned(
+                        right: 6,
+                        top: 6,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 5, vertical: 1),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE15D5D),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                              unreadDm > 99 ? '99+' : '$unreadDm',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
             body: Padding(
               padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top + kToolbarHeight),
+                  top: MediaQuery.of(context).padding.top + kOrdnanceRootBar),
               child: Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    child: Row(
-                      children: [
-                        Text(tr('community_title'),
-                            style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold)),
-                        const Spacer(),
-                        IconButton(
-                          tooltip: tr('tab_mine'),
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const MyScreen()),
-                          ),
-                          icon: const Icon(Icons.person_outline),
-                        ),
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            IconButton(
-                              tooltip: tr('my_dms'),
-                              onPressed: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) =>
-                                        const CommunityDmScreen()),
-                              ),
-                              icon: const Icon(Icons.mail_outlined),
-                            ),
-                            if (unreadDm > 0)
-                              Positioned(
-                                right: 6,
-                                top: 6,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 5, vertical: 1),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Text(
-                                      unreadDm > 99 ? '99+' : '$unreadDm',
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold)),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
                   Expanded(
                     child: ListView(
                           padding:
-                              const EdgeInsets.fromLTRB(16, 8, 16, 110),
+                              const EdgeInsets.fromLTRB(20, 8, 20, 128),
                           children: [
                             if (!kReleaseMode) ...[
                               Text(tr('community_note'),

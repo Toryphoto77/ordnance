@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../design/ordnance_tokens.dart';
 
 /// 靶纸落点图：5 环靶纸，点按标弹着点（可拖动调整），弹着点坐标
 /// 归一化到 [-1,1]（中心 0，边缘 ±1），每环一步 = gridCm 厘米。
@@ -139,7 +140,7 @@ class _TargetPainter extends CustomPainter {
       final dot = Paint()
         ..color = isSel
             ? const Color(0xFFD32F2F)
-            : const Color(0xFFE86A1C)
+            : ordnanceSignal
         ..style = PaintingStyle.fill;
       canvas.drawCircle(Offset(px, py), isSel ? 9 : 7, dot);
       final rim = Paint()

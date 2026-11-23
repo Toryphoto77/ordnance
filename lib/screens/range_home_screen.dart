@@ -12,6 +12,8 @@ import 'maintenance_screen.dart';
 import '../tool_logic.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/app_top_bar.dart';
+import '../widgets/ordnance_buttons.dart';
+import '../widgets/ordnance_sheet.dart';
 import 'community_range_screen.dart';
 import 'gun_picker_dialog.dart';
 import 'range_trip_screen.dart';
@@ -115,15 +117,17 @@ class _RangeHomeScreenState extends State<RangeHomeScreen> {
     var ammoName = _ammo.isEmpty ? '' : _ammo.first.name;
     final lot = TextEditingController(
         text: _ammo.isEmpty ? '' : (_ammo.first.lot.isEmpty ? _ammo.first.batchNo : _ammo.first.lot));
-    final saved = await showDialog<bool>(
-      context: context,
+    final saved = await showOrdnanceSheet<bool>(
+      context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setLocal) => AlertDialog(
-          title: Text(tr('range_log_session')),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+        builder: (ctx, setLocal) => SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(tr('range_log_session'),
+                  style: Theme.of(ctx).textTheme.titleLarge),
+              const SizedBox(height: 8),
                 DropdownButton<String>(
                   isExpanded: true,
                   value: gunName.isEmpty ? null : gunName,
@@ -210,19 +214,24 @@ class _RangeHomeScreenState extends State<RangeHomeScreen> {
                     controller: notes,
                     decoration:
                         InputDecoration(labelText: tr('range_field_notes'))),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    AppButton.text(
+                      label: tr('cancel'),
+                      onPressed: () => Navigator.pop(ctx, false),
+                    ),
+                    const Spacer(),
+                    AppButton.primary(
+                      label: tr('save'),
+                      onPressed: () => Navigator.pop(ctx, true),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: Text(tr('cancel'))),
-            TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(tr('save'))),
-          ],
         ),
-      ),
     );
     final fired = int.tryParse(rounds.text.trim()) ?? 0;
     final fields = (
@@ -307,34 +316,33 @@ class _RangeHomeScreenState extends State<RangeHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final grey = Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF8A8578)
-        : const Color(0xFF9A917F);
+    final scheme = Theme.of(context).colorScheme;
     final due = _due;
     final low = _ammo.where((a) => a.isLow).toList();
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: const OrdnanceAppBar(),
+      appBar: OrdnanceAppBar(
+        title: tr('range_home_title'),
+        showWeather: true,
+      ),
       body: ListView(
-        padding: EdgeInsets.fromLTRB(
-            16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 120),
+        padding: ordnanceListPadding(context, root: true, bottom: 128),
         children: [
-          Text(tr('range_home_title'),
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
           Text(tr('range_home_sub'),
-              style: TextStyle(color: grey, fontSize: 13)),
-          const SizedBox(height: 12),
-          FilledButton.icon(
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  )),
+          const SizedBox(height: 16),
+          AppButton.primary(
+            label: tr('range_log_session'),
+            icon: Icons.add,
             onPressed: _log,
-            icon: const Icon(Icons.add),
-            label: Text(tr('range_log_session')),
           ),
           const SizedBox(height: 8),
-          OutlinedButton(
+          AppButton.secondary(
+            label: tr('range_trip_link'),
             onPressed: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const RangeTripScreen())),
-            child: Text(tr('range_trip_link')),
           ),
           if (due.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -366,20 +374,22 @@ class _RangeHomeScreenState extends State<RangeHomeScreen> {
           const SizedBox(height: 16),
           Row(
             children: [
-              Text(tr('range_recent'),
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const Spacer(),
-              TextButton(
+              Expanded(
+                child: Text(tr('range_recent'),
+                    style: Theme.of(context).textTheme.titleMedium),
+              ),
+              AppButton.text(
+                label: tr('range_progress'),
                 onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (_) => const CommunityRangeScreen())),
-                child: Text(tr('range_progress')),
               ),
             ],
           ),
           if (_sessions.isEmpty)
-            Text(tr('range_empty'), style: TextStyle(color: grey))
+            Text(tr('range_empty'),
+                style: TextStyle(color: scheme.onSurfaceVariant))
           else
             for (final s in _sessions.take(20))
               Card(

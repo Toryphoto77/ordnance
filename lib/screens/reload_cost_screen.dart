@@ -3,6 +3,7 @@ import '../i18n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/app_top_bar.dart';
+import '../design/ordnance_tokens.dart';
 
 /// 复装成本：只算你输入的价格，不提供任何厂商报价、不给装药建议。
 /// 弹壳成本按单价除以复用次数摊销；复用次数填 1 表示一次性弹壳。
@@ -322,7 +323,7 @@ class _ResultLine extends StatelessWidget {
       child: Text(text,
           style: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: Color(0xFFE86A1C),
+              color: ordnanceSignal,
               fontSize: 15)),
     );
   }

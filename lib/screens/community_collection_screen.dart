@@ -11,6 +11,7 @@ import '../widgets/community_theme.dart';
 import '../widgets/scale_tap.dart';
 import 'community_account_dialogs.dart';
 import 'gun_picker_dialog.dart';
+import '../design/ordnance_tokens.dart';
 
 /// 我的收藏柜：登记拥有 / 上手过 / 想收集的枪，一键生成收藏柜卡面分享。
 /// 卡面用 dart:ui 手绘成 PNG，走 gunsmap/share 的 shareImage 通道发出。
@@ -253,7 +254,7 @@ class CommunityCollectionScreen extends StatelessWidget {
     final stat = _para(
         '共 $gunCount 把 · $accCount 件配件 · 拥有 $owned · 上手过 $handled · 想收集 $wanted',
         44,
-        const Color(0xFFE86A1C),
+        ordnanceSignal,
         bold: true);
     canvas.drawParagraph(stat, ui.Offset(80, y));
     y += 120;
@@ -412,7 +413,7 @@ class CommunityCollectionScreen extends StatelessWidget {
                       gradient: const LinearGradient(
                         colors: [
                           Color(0xFF6B5B3E),
-                          Color(0xFFE86A1C),
+                          ordnanceSignal,
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,

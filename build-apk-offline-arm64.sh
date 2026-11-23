@@ -1,5 +1,5 @@
 #!/bin/bash
-# Gun's Map（枪械图鉴 App）完全离线 debug APK 编译。
+# Ordnance 完全离线 debug APK 编译（arm64）。
 # 用法：bash build-apk-offline.sh
 #
 # 背景：沙箱在 TCP 层拦截 Gradle 的出站连接（Apache HttpClient），即使把
@@ -292,13 +292,13 @@ KOTEOF
 echo "MainActivity mailto channel patched"
 
 
-# ---- 改名：显示名 Gun's Map（内部包名 firearms_catalog 不动）----
+# ---- 改名：显示名 Ordnance（内部包名 firearms_catalog 不动）----
 # ---- 启动图标：核对 icon / roundIcon（模板缺 roundIcon 时补上）----
 python3 - <<'PYEOF'
 import re
 p = "/home/hatch/workspace/firearms-app-build/android/app/src/main/AndroidManifest.xml"
 s = open(p).read()
-s = re.sub(r'android:label="[^"]*"', 'android:label="Gun\'s Map"', s, count=1)
+s = re.sub(r'android:label="[^"]*"', 'android:label="Ordnance"', s)
 s = re.sub(r'android:icon="[^"]*"', 'android:icon="@mipmap/ic_launcher"', s, count=1)
 # 正式版检查更新要联网：Flutter 模板只在 debug/profile 清单里放 INTERNET
 # 权限，main 清单没有，release 包联网会直接失败，这里补上。
@@ -418,6 +418,7 @@ mkdir -p "$GUH/init.d"
 printf 'gradle.startParameter.offline = true\n' > "$GUH/init.d/offline.gradle"
 trap 'rm -f "$GUH/init.d/offline.gradle"' EXIT
 flutter build apk --debug --target-platform android-arm64 --no-android-gradle-daemon
-cp build/app/outputs/flutter-apk/app-debug.apk "$WORK/app-debug-arm64.apk"
-ls -la "$WORK/app-debug-arm64.apk"
+VERSION=$(sed -n 's/^version: *\([0-9][^+]*\).*/\1/p' pubspec.yaml)
+cp build/app/outputs/flutter-apk/app-debug.apk "$WORK/Ordnance-v${VERSION}-debug.apk"
+ls -la "$WORK/Ordnance-v${VERSION}-debug.apk"
 echo BUILD_DONE

@@ -17,6 +17,10 @@ String gunNameEnOf(String chineseName) => gunNameEn[chineseName] ?? chineseName;
 /// 枪主显示名：详情与列表一律用 nameEn（738 支全有）。
 String gunDisplayName(Gun g) => g.nameEn ?? g.name;
 
+/// Shared element between a directory row and its detail title.
+String gunHeroTag(Gun g) =>
+    'gun:${g.vendor}|${g.name}|${g.caliber}|${g.year}';
+
 /// 8 个品类（任务定稿的单数形式）。
 const Map<String, String> _categories = {
   '步枪': 'Rifle',

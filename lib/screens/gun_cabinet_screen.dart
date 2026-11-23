@@ -11,6 +11,7 @@ import '../i18n.dart';
 import '../models.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/app_top_bar.dart';
+import '../widgets/ordnance_buttons.dart';
 import 'gun_picker_dialog.dart';
 
 /// 我的枪柜：首页“我的枪柜”点进来的一页。
@@ -466,20 +467,21 @@ class _GunCabinetScreenState extends State<GunCabinetScreen> {
         return ValueListenableBuilder<String>(
           valueListenable: localeNotifier,
           builder: (_, ___, ____) => Scaffold(
-            appBar: SubPageAppBar(title: tr('cab_title')),
+            extendBodyBehindAppBar: true,
+            appBar: OrdnanceAppBar(title: tr('cab_title')),
             body: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: ordnanceListPadding(context, root: true, bottom: 128),
               children: [
                 Row(
                   children: [
-                    Text(tr('cab_guns'),
-                        style: const TextStyle(
-                            fontSize: 17, fontWeight: FontWeight.bold)),
-                    const Spacer(),
-                    OutlinedButton.icon(
+                    Expanded(
+                      child: Text(tr('cab_guns'),
+                          style: Theme.of(context).textTheme.titleMedium),
+                    ),
+                    AppButton.secondary(
+                      label: tr('cab_add_owned'),
+                      icon: Icons.add,
                       onPressed: _addOwnedGun,
-                      icon: const Icon(Icons.add, size: 18),
-                      label: Text(tr('cab_add_owned')),
                     ),
                   ],
                 ),
@@ -613,12 +615,9 @@ class _GunCabinetScreenState extends State<GunCabinetScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFE86A1C)),
+                  AppButton.primary(
+                    label: tr('cab_mount_add'),
                     onPressed: _addMount,
-                    child: Text(tr('cab_mount_add'),
-                        style: const TextStyle(color: Colors.white)),
                   ),
                 ],
                 const SizedBox(height: 12),

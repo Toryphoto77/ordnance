@@ -345,7 +345,7 @@ python3 - <<'PYEOF'
 import re
 p = "/home/hatch/workspace/firearms-app-build/android/app/src/main/AndroidManifest.xml"
 s = open(p).read()
-s = re.sub(r'android:label="[^"]*"', 'android:label="Ordnance"', s, count=1)
+s = re.sub(r'android:label="[^"]*"', 'android:label="Ordnance"', s)
 s = re.sub(r'android:icon="[^"]*"', 'android:icon="@mipmap/ic_launcher"', s, count=1)
 # 正式版检查更新要联网：Flutter 模板只在 debug/profile 清单里放 INTERNET
 # 权限，main 清单没有，release 包联网会直接失败，这里补上。
@@ -556,6 +556,7 @@ mkdir -p "$GUH/init.d"
 printf 'gradle.startParameter.offline = true\n' > "$GUH/init.d/offline.gradle"
 trap 'rm -f "$GUH/init.d/offline.gradle"' EXIT
 flutter build apk --release --target-platform android-arm64 --no-android-gradle-daemon
-cp build/app/outputs/flutter-apk/app-release.apk "$WORK/app-release-arm64.apk"
-ls -la "$WORK/app-release-arm64.apk"
+VERSION=$(sed -n 's/^version: *\([0-9][^+]*\).*/\1/p' pubspec.yaml)
+cp build/app/outputs/flutter-apk/app-release.apk "$WORK/Ordnance-v${VERSION}.apk"
+ls -la "$WORK/Ordnance-v${VERSION}.apk"
 echo BUILD_DONE

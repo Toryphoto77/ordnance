@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/scale_tap.dart';
+import '../design/ordnance_tokens.dart';
 
 class AccessoriesScreen extends StatefulWidget {
   const AccessoriesScreen({super.key});
@@ -305,7 +306,7 @@ class _AccessoryDetailScreenState extends State<AccessoryDetailScreen> {
                 padding:
                     const EdgeInsets.symmetric(vertical: 13, horizontal: 16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE86A1C),
+                  color: ordnanceSignal,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(

@@ -154,21 +154,9 @@ Widget _dialogActions(
       ),
       const SizedBox(width: 8),
       Expanded(
-        child: ValueListenableBuilder<Color>(
-          valueListenable: accentNotifier,
-          builder: (_, accent, __) => ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: accent,
-              foregroundColor: Colors.white,
-              minimumSize: const Size.fromHeight(48),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
-            ),
-            onPressed: onPrimary,
-            child: Text(primaryLabel,
-                style: const TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.bold)),
-          ),
+        child: ElevatedButton(
+          onPressed: onPrimary,
+          child: Text(primaryLabel),
         ),
       ),
     ],
@@ -209,12 +197,6 @@ Widget _avatarPickerRow({
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                side: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.5)),
-              ),
               onPressed: () async {
                 final bytes = await _pickAvatar(context);
                 if (bytes == null) {
@@ -610,32 +592,15 @@ void askLoginDialog(BuildContext context) {
       actions: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ValueListenableBuilder<Color>(
-            valueListenable: accentNotifier,
-            builder: (_, accent, __) => ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: accent,
-                foregroundColor: Colors.white,
-                minimumSize: const Size.fromHeight(48),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
-              ),
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                showLoginDialog(context);
-              },
-              child: Text(tr('login'),
-                  style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.bold)),
-            ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              showLoginDialog(context);
+            },
+            child: Text(tr('login')),
           ),
           const SizedBox(height: 10),
           OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size.fromHeight(48),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
-            ),
             onPressed: () {
               Navigator.of(dialogContext).pop();
               showRegisterDialog(context);

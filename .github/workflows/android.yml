@@ -52,9 +52,15 @@ jobs:
       - name: Build debug APK
         run: flutter build apk --debug
 
+      - name: Name the APK
+        run: |
+          VERSION=$(sed -n 's/^version: *\([0-9][^+]*\).*/\1/p' pubspec.yaml)
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-debug.apk "dist/Ordnance-v${VERSION}-debug.apk"
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ordnance-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          path: dist/Ordnance-v*.apk
           if-no-files-found: error

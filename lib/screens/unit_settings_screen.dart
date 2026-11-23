@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../i18n.dart';
 import '../tools_units.dart';
 import '../widgets/app_top_bar.dart';
+import '../design/ordnance_tokens.dart';
 
 /// 单位设置区（第 8 项）：只学截图的分段 pill + 分组折叠形态，
 /// 不抄截图里的解算开关（Aerodynamic Jump / Spin Drift /
@@ -223,7 +224,7 @@ class _SegmentedPill extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
                   color: o.$1 == selected
-                      ? const Color(0xFFE86A1C)
+                      ? ordnanceSignal
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(999),
                 ),

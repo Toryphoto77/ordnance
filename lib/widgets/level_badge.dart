@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../community_store.dart';
 import 'community_theme.dart';
 import 'glass_dialog.dart';
+import '../design/ordnance_tokens.dart';
 
 /// 等级铭牌：金属质感实心底 + 居中等级字 + 段位名，挂在每条帖子作者名旁。
 /// 外框高度严格等于昵称字号（nicknameFontSize），不比昵称字大，
@@ -266,7 +267,7 @@ class IdentityBadge extends StatelessWidget {
 
   Color get _color {
     if (account.isFounder) return const Color(0xFFD4A017);
-    if (account.role == 'admin') return const Color(0xFFE86A1C);
+    if (account.role == 'admin') return ordnanceSignal;
     return const Color(0xFF7FA8BC);
   }
 

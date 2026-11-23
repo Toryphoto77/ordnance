@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../apk_filename.dart';
 import '../i18n.dart';
 import '../app_version.dart';
 import '../theme_accent.dart';
@@ -20,6 +21,7 @@ import 'about_screen.dart';
 import 'theme_screen.dart';
 import 'app_log_screen.dart';
 import 'feedback_screen.dart';
+import '../design/ordnance_tokens.dart';
 
 /// 设置页：主题切换与关于信息。
 class SettingsScreen extends StatelessWidget {
@@ -49,31 +51,24 @@ class SettingsScreen extends StatelessWidget {
                       width: 72, height: 72, fit: BoxFit.cover),
                 ),
                 const SizedBox(height: 10),
-                const Text("Ordnance",
-                    style: TextStyle(
-                        fontFamily: 'Manrope',
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold)),
+                Text('Ordnance',
+                    style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 4),
-                Text('Firearms Atlas · Accessories · Reloading · Community',
+                Text('Range · Armory · Ammunition · Directory',
                     style: TextStyle(color: grey, fontSize: 12)),
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: dark
-                        ? const Color(0xFFC9A86A)
-                        : const Color(0xFF6B5B3E),
+                    color: Theme.of(context).colorScheme.primary,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text('v$appVersion',
                       style: TextStyle(
-                          color: dark
-                              ? const Color(0xFF000000)
-                              : Colors.white,
+                          color: Theme.of(context).colorScheme.onPrimary,
                           fontSize: 12,
-                          fontWeight: FontWeight.bold)),
+                          fontWeight: FontWeight.w600)),
                 ),
                 const SizedBox(height: 6),
                 Text(tr('settings_engine_prefix') + 'Flutter 3.47.8',
@@ -432,14 +427,20 @@ class SettingsScreen extends StatelessWidget {
       final latest = tag.replaceFirst(RegExp(r'^v'), '').split('-').first;
       final notes = (data['body'] as String?) ?? '';
       String? apkUrl;
+      String? fallbackApk;
       for (final a in (data['assets'] as List? ?? [])) {
         final asset = a as Map;
         final name = (asset['name'] as String?) ?? '';
-        if (name.endsWith('.apk')) {
-          apkUrl = asset['browser_download_url'] as String?;
+        if (!name.toLowerCase().endsWith('.apk')) continue;
+        final url = asset['browser_download_url'] as String?;
+        if (url == null) continue;
+        fallbackApk ??= url;
+        if (isOrdnanceApkName(name) && !name.toLowerCase().contains('debug')) {
+          apkUrl = url;
           break;
         }
       }
+      apkUrl ??= fallbackApk;
       final link =
           apkUrl ?? (data['html_url'] as String? ?? 'https://github.com/Toryphoto77/ordnance/releases');
       if (!context.mounted) return;
@@ -716,8 +717,11 @@ class _DownloadDialogState extends State<_DownloadDialog> {
         throw HttpException('HTTP ${response.statusCode}');
       }
       final total = response.contentLength;
-      final file =
-          File('${widget.dir}/Ordnance-v${widget.version}-arm64.apk');
+      final name = ordnanceApkFileName(
+        version: widget.version,
+        contentDisposition: response.headers.value('content-disposition'),
+      );
+      final file = File('${widget.dir}/$name');
       final sink = file.openWrite();
       var received = 0;
       await for (final chunk in response) {
@@ -788,7 +792,7 @@ class _QuickActionsCardState extends State<_QuickActionsCard> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-            color: const Color(0xFFE86A1C).withValues(alpha: 0.35)),
+            color: ordnanceSignal.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -801,7 +805,7 @@ class _QuickActionsCardState extends State<_QuickActionsCard> {
               child: Row(
                 children: [
                   const Icon(Icons.bolt_outlined,
-                      size: 22, color: Color(0xFFE86A1C)),
+                      size: 22, color: ordnanceSignal),
                   const SizedBox(width: 8),
                   Text(tr('settings_quick'),
                       style: TextStyle(

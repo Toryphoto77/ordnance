@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../i18n.dart';
 import '../location_flow.dart';
 import 'app_toast.dart';
+import '../design/ordnance_tokens.dart';
 
 /// 应用内地图预览（零第三方包）：OSM 瓦片拼图 + 图钉。
 /// 拖动平移、双击放大、右下角 ± 缩放；点地图跳系统地图。
@@ -191,7 +192,7 @@ class _MapPreviewState extends State<MapPreview> {
                           left: pinX - 16,
                           top: pinY - 32,
                           child: const Icon(Icons.location_on,
-                              size: 32, color: Color(0xFFE86A1C)),
+                              size: 32, color: ordnanceSignal),
                         ),
                       Positioned(
                         left: 6,

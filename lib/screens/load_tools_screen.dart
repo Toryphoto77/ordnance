@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../tools_units.dart';
 import '../widgets/app_top_bar.dart';
+import '../design/ordnance_tokens.dart';
 
 /// 装药工具：只做物理换算，不给装药建议。
 /// - 单位换算：格令 ↔ 克、英尺/秒 ↔ 米/秒、英寸 ↔ 厘米；
@@ -353,7 +354,7 @@ class _ResultLine extends StatelessWidget {
       child: Text(text,
           style: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: Color(0xFFE86A1C),
+              color: ordnanceSignal,
               fontSize: 15)),
     );
   }

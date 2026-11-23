@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../community_store.dart';
 import '../i18n.dart';
 import 'app_toast.dart';
+import '../design/ordnance_tokens.dart';
 
 /// 投票卡（第 11 项）：每选项一行：选项文字 + 票数 + 百分比条；
 /// 点选项投票（每人一票，改投移票，本地存储）；未登录点选项提示登录。
@@ -56,7 +57,7 @@ class PollCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: myVote == i
-                      ? const Color(0xFFE86A1C)
+                      ? ordnanceSignal
                       : grey.withValues(alpha: 0.4),
                 ),
               ),
@@ -71,7 +72,7 @@ class PollCard extends StatelessWidget {
                       ),
                       if (myVote == i)
                         const Icon(Icons.check_circle,
-                            size: 16, color: Color(0xFFE86A1C)),
+                            size: 16, color: ordnanceSignal),
                       const SizedBox(width: 6),
                       Text(
                           total == 0
@@ -91,7 +92,7 @@ class PollCard extends StatelessWidget {
                       minHeight: 6,
                       backgroundColor: grey.withValues(alpha: 0.2),
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFFE86A1C)),
+                          ordnanceSignal),
                     ),
                   ),
                 ],

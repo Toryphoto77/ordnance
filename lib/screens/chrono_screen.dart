@@ -403,11 +403,9 @@ class ChronoPreviewPage extends StatelessWidget {
             ],
             const SizedBox(height: 16),
             FilledButton(
-              style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFE86A1C)),
+
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text(tr('chrono_confirm_save'),
-                  style: const TextStyle(color: Colors.white)),
+              child: Text(tr('chrono_confirm_save')),
             ),
           ],
         ),
@@ -532,11 +530,9 @@ class _ChronoCsvImportPageState extends State<ChronoCsvImportPage> {
             ),
             const SizedBox(height: 16),
             FilledButton(
-              style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFE86A1C)),
+
               onPressed: _preview,
-              child: Text(tr('chrono_preview'),
-                  style: const TextStyle(color: Colors.white)),
+              child: Text(tr('chrono_preview')),
             ),
           ],
         ),
@@ -657,11 +653,9 @@ class _ChronoManualImportPageState extends State<ChronoManualImportPage> {
                 ),
                 const SizedBox(width: 8),
                 FilledButton(
-                  style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFE86A1C)),
+
                   onPressed: _addValue,
-                  child: Text(tr('chrono_add'),
-                      style: const TextStyle(color: Colors.white)),
+                  child: Text(tr('chrono_add')),
                 ),
               ],
             ),
@@ -689,11 +683,9 @@ class _ChronoManualImportPageState extends State<ChronoManualImportPage> {
             ),
             const SizedBox(height: 16),
             FilledButton(
-              style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFE86A1C)),
+
               onPressed: _preview,
-              child: Text(tr('chrono_preview'),
-                  style: const TextStyle(color: Colors.white)),
+              child: Text(tr('chrono_preview')),
             ),
           ],
         ),
@@ -798,11 +790,9 @@ class _ChronoAbAddPageState extends State<ChronoAbAddPage> {
             ),
             const SizedBox(height: 16),
             FilledButton(
-              style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFE86A1C)),
+
               onPressed: _save,
-              child: Text(tr('chrono_confirm_save'),
-                  style: const TextStyle(color: Colors.white)),
+              child: Text(tr('chrono_confirm_save')),
             ),
           ],
         ),

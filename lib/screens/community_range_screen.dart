@@ -28,6 +28,7 @@ import '../widgets/score_grade_chip.dart';
 import '../widgets/target_plot.dart';
 import '../widgets/time_line_chart.dart';
 import 'community_post_detail_screen.dart';
+import '../design/ordnance_tokens.dart';
 
 /// 靶场成绩：分组、距离、发数，绑定枪种；成绩直接喂靶场勋章。
 /// 顶部统计卡 + 按枪筛选 + 结构化卡片，成绩不再是一长串字；
@@ -839,7 +840,7 @@ Future<ScoreDialogResult?> showScoreDialog(
               child: Text(tr('save'),
                   style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFFE86A1C))),
+                      color: ordnanceSignal)),
             ),
           ],
         );
@@ -1361,8 +1362,7 @@ class _CommunityRangeScreenState extends State<CommunityRangeScreen> {
                                           series: [
                                             TimeSeries(
                                                 label: '',
-                                                color: const Color(
-                                                    0xFFE86A1C),
+                                                color: ordnanceSignal,
                                                 points: trendPoints),
                                           ],
                                           unit: 'MOA',
@@ -1457,7 +1457,7 @@ class _CommunityRangeScreenState extends State<CommunityRangeScreen> {
                                               ' ${_fmt(effCm)} ${tr('trip_cm')}${moa > 0 ? '${tr('range_paren_open')}${_fmt(moa)} MOA / ${_fmt(mil)} ${tr('range_mil')}${tr('range_paren_close')}' : ''}${r.shotPoints.length >= 2 ? ' · ${tr('range_plot_short')}' : ''}',
                                           style: const TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              color: Color(0xFFE86A1C),
+                                              color: ordnanceSignal,
                                               fontSize: 15))
                                     else
                                       Text(tr('range_no_group'),
@@ -1521,7 +1521,7 @@ class _CommunityRangeScreenState extends State<CommunityRangeScreen> {
                                           icon: Icon(Icons.public,
                                               size: 20,
                                               color: r.isPublic
-                                                  ? const Color(0xFFE86A1C)
+                                                  ? ordnanceSignal
                                                   : null),
                                           tooltip: r.isPublic
                                               ? tr('score_unpublish')

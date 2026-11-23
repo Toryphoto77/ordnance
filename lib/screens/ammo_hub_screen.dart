@@ -15,22 +15,19 @@ class AmmoHubScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final grey = Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF8A8578)
-        : const Color(0xFF9A917F);
+    final scheme = Theme.of(context).colorScheme;
+    final muted = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: scheme.onSurfaceVariant,
+        );
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: const OrdnanceAppBar(),
+      appBar: OrdnanceAppBar(title: tr('ammo_hub_title')),
       body: ListView(
-        padding: EdgeInsets.fromLTRB(
-            16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 120),
+        padding: ordnanceListPadding(context, root: true, bottom: 128),
         children: [
-          Text(tr('ammo_hub_title'),
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Text(tr('ammo_hub_sub'), style: TextStyle(color: grey, fontSize: 13)),
+          Text(tr('ammo_hub_sub'), style: muted),
           const SizedBox(height: 8),
-          Text(tr('load_caution'), style: TextStyle(color: grey, fontSize: 12)),
+          Text(tr('load_caution'), style: muted),
           const SizedBox(height: 16),
           _tile(context, Icons.inventory_2_outlined, tr('ammo_open_inventory'),
               () => const AmmoInventoryScreen()),
@@ -49,13 +46,16 @@ class AmmoHubScreen extends StatelessWidget {
 
   Widget _tile(BuildContext context, IconData icon, String title,
       Widget Function() page) {
-    return Card(
-      child: ListTile(
-        leading: Icon(icon),
-        title: Text(title),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => Navigator.push(
-            context, MaterialPageRoute(builder: (_) => page())),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Card(
+        child: ListTile(
+          leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
+          title: Text(title),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.push(
+              context, MaterialPageRoute(builder: (_) => page())),
+        ),
       ),
     );
   }

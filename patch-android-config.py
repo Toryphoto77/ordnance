@@ -4,14 +4,17 @@
 用法（仓库根目录，且已执行 flutter create 生成 android/）：
     python3 patch-android-config.py
 
-做三件事，可重复执行：
+做四件事，可重复执行：
   1. applicationId / namespace 改成 com.toryphoto77.ordnance；
   2. MainActivity 移到新包路径并改写 package 声明；
-  3. 如果 android/key.properties 存在，就把 release 构建改成用正式密钥库签名
+  3. 把 android:label 指到 @string/app_name，字符串写成 Ordnance
+     （flutter create 会把工程名 firearms_catalog 写进清单，安装后桌面就显示那个名字）；
+  4. 如果 android/key.properties 存在，就把 release 构建改成用正式密钥库签名
      （否则保持 Flutter 模板的 debug 签名，供本地调试与 CI 冒烟构建）。
 
 密钥库与 key.properties 都不进仓库，由本地脚本或 CI 生成。
 """
+import re
 import sys
 from pathlib import Path
 
@@ -90,6 +93,57 @@ def move_activity() -> None:
     print("MainActivity 移到 " + str(dst.parent))
 
 
+APP_LABEL = "Ordnance"
+STRINGS = Path("android/app/src/main/res/values/strings.xml")
+
+
+def patch_labels() -> None:
+    """Launcher name comes from android:label.
+
+    `flutter create --project-name firearms_catalog` writes
+    android:label="firearms_catalog". That string is what the installer and
+    the home screen show after a download. Point every label at
+    @string/app_name and set that string to Ordnance.
+    """
+    manifests = list(Path("android/app/src").rglob("AndroidManifest.xml"))
+    if not manifests:
+        print("找不到 AndroidManifest.xml", file=sys.stderr)
+        sys.exit(2)
+    for manifest in manifests:
+        original = manifest.read_text()
+        updated = re.sub(
+            r'android:label="[^"]*"',
+            'android:label="@string/app_name"',
+            original,
+        )
+        if updated != original:
+            manifest.write_text(updated)
+            print("android:label -> @string/app_name in " + str(manifest))
+        else:
+            print("清单没有 android:label：" + str(manifest))
+    STRINGS.parent.mkdir(parents=True, exist_ok=True)
+    entry = f'    <string name="app_name">{APP_LABEL}</string>\n'
+    if STRINGS.exists():
+        text = STRINGS.read_text()
+        if 'name="app_name"' in text:
+            text = re.sub(
+                r'<string name="app_name">[^<]*</string>',
+                f'<string name="app_name">{APP_LABEL}</string>',
+                text,
+            )
+        else:
+            text = text.replace("</resources>", entry + "</resources>")
+        STRINGS.write_text(text)
+    else:
+        STRINGS.write_text(
+            '<?xml version="1.0" encoding="utf-8"?>\n'
+            "<resources>\n"
+            + entry
+            + "</resources>\n"
+        )
+    print("应用显示名：" + APP_LABEL)
+
+
 def patch_signing() -> None:
     if not KEY_PROPS.exists():
         print("没有 key.properties：release 仍用 debug 签名（仅调试用）")
@@ -112,6 +166,7 @@ def main() -> int:
         return 1
     patch_ids()
     move_activity()
+    patch_labels()
     patch_signing()
     return 0
 

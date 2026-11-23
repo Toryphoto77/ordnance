@@ -18,6 +18,7 @@ import 'suppliers_screen.dart';
 import 'load_tools_screen.dart';
 import 'reload_log_screen.dart';
 import 'reload_tools_screen.dart';
+import '../design/ordnance_tokens.dart';
 
 /// 复装页三个板块：
 /// 一、子弹口径图鉴（可搜索、可按弹种分组，卡片标题直接显示关键尺寸）；
@@ -695,7 +696,7 @@ class _ReloadWorkbenchScreenState extends State<ReloadWorkbenchScreen> {
                   trailing: (_picked[_libKind] ?? '')
                           .startsWith('${c.vendor} ${c.name}')
                       ? const Icon(Icons.check_circle,
-                          color: Color(0xFFE86A1C))
+                          color: ordnanceSignal)
                       : null,
                   onTap: () {
                     var picked = '${c.vendor} ${c.name}';

@@ -21,13 +21,13 @@ flutter:
   shaders:
     - shaders/liquid_glass.frag
   fonts:
-    - family: Manrope
+    - family: Inter
       fonts:
-        - asset: assets/fonts/Manrope-Regular.ttf
+        - asset: assets/fonts/Inter-Regular.ttf
           weight: 400
-        - asset: assets/fonts/Manrope-Medium.ttf
+        - asset: assets/fonts/Inter-Medium.ttf
           weight: 500
-        - asset: assets/fonts/Manrope-SemiBold.ttf
+        - asset: assets/fonts/Inter-SemiBold.ttf
           weight: 600
-        - asset: assets/fonts/Manrope-Bold.ttf
+        - asset: assets/fonts/Inter-Bold.ttf
           weight: 700

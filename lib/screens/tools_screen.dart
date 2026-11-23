@@ -35,15 +35,17 @@ class _ToolsScreenState extends State<ToolsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: const OrdnanceAppBar(),
+      appBar: SubPageAppBar(title: tr('tab_tools')),
       body: ListView(
-        padding: EdgeInsets.fromLTRB(
-            16, MediaQuery.of(context).padding.top + kToolbarHeight + 16, 16, 110),
+        padding: ordnanceListPadding(context, root: false, bottom: 32),
         children: [
           Text(tr('tools_note'),
-              style: TextStyle(color: Colors.grey, fontSize: 12)),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  )),
           const SizedBox(height: 16),
           // 单位设置区（第 8 项）：旧的一行英制/公制开关收进
           // 单位设置页（分组折叠 + 分段 pill），存储 key 不变。
@@ -175,7 +177,7 @@ class _ToolTile extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
-        leading: Icon(icon, color: const Color(0xFF8C6A2F)),
+        leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
         title: Text(title,
             style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(subtitle),

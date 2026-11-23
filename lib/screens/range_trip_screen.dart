@@ -860,11 +860,9 @@ class _RangeTripAddPageState extends State<RangeTripAddPage> {
                   )),
             const SizedBox(height: 16),
             FilledButton(
-              style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFE86A1C)),
+
               onPressed: _save,
-              child: Text(tr('chrono_confirm_save'),
-                  style: const TextStyle(color: Colors.white)),
+              child: Text(tr('chrono_confirm_save')),
             ),
           ],
         ),
