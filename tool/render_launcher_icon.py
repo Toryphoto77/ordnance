@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
 BG = (12, 14, 18, 255)
-INK = (242, 243, 245, 255)
+INK = (226, 177, 90, 255)
 CLEAR = (0, 0, 0, 0)
 
 # launcher px, adaptive foreground px
@@ -28,9 +28,9 @@ def draw_mark(size: int, color, background) -> Image.Image:
     draw = ImageDraw.Draw(img)
     cx = cy = size / 2
     # Stay inside the adaptive safe zone (66/108 of the canvas).
-    outer = size * 0.22
-    inner = outer * 0.62
-    stroke = max(2, int(round(size * 0.018)))
+    outer = size * 0.28
+    inner = outer * 0.55
+    stroke = max(3, int(round(size * 0.055)))
     box = lambda r: [cx - r, cy - r, cx + r, cy + r]
     draw.ellipse(box(outer), outline=color, width=stroke)
     draw.ellipse(box(inner), outline=color, width=max(1, stroke - 1))

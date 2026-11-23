@@ -8,6 +8,7 @@ import '../haptics.dart';
 import '../i18n.dart';
 import '../models.dart';
 import '../widgets/app_top_bar.dart';
+import '../widgets/instrument.dart';
 import '../widgets/ordnance_buttons.dart';
 import 'gun_detail_screen.dart';
 import 'gun_list_screen.dart';
@@ -90,11 +91,39 @@ class _CatalogScreenState extends State<CatalogScreen> {
       body: ListView(
           padding: ordnanceListPadding(context, root: true, bottom: 128),
           children: [
-            Text(tr('dir_sub'),
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: muted)),
+            HudPanel(
+              glow: true,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Eyebrow(tr('inst_firearms')),
+                        FigureText('${guns.length}'),
+                        const SizedBox(height: 4),
+                        Text(tr('dir_sub'),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(color: muted)),
+                      ],
+                    ),
+                  ),
+                  ProgressRing(
+                    value: _filtering
+                        ? (results.isEmpty
+                            ? 0
+                            : results.length / guns.length)
+                        : 1,
+                    center: _filtering ? '${results.length}' : '${directoryTypeIds.length}',
+                    caption: tr('tab_catalog'),
+                    size: 78,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
             if (_searchExpanded) ...[
               TextField(
                 autofocus: true,

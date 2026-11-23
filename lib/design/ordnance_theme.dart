@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../haptics.dart';
-import '../theme_accent.dart';
 import '../widgets/page_transitions.dart';
 import 'ordnance_tokens.dart';
 
@@ -49,8 +48,13 @@ Color _onFill(Color fill) => fill.computeLuminance() > 0.55
 
 /// Accent that stays readable on the scaffold of [brightness].
 Color ordnancePrimary(Brightness brightness, Color accent) {
-  if (brightness == Brightness.dark) return lightenedAccent(accent);
   final hsl = HSLColor.fromColor(accent);
+  if (brightness == Brightness.dark) {
+    final lightness = hsl.lightness < 0.58 ? 0.62 : hsl.lightness;
+    final saturation = (hsl.saturation < 0.45 ? 0.48 : hsl.saturation)
+        .clamp(0.42, 0.78);
+    return hsl.withLightness(lightness).withSaturation(saturation).toColor();
+  }
   if (hsl.lightness > 0.46) return hsl.withLightness(0.36).toColor();
   return accent;
 }
@@ -283,21 +287,35 @@ ThemeData buildOrdnanceTheme(Brightness brightness, Color accent) {
   );
 }
 
+const kOrdnanceCjkFallback = <String>[
+  'Noto Sans SC',
+  'Noto Sans CJK SC',
+  'Source Han Sans SC',
+  'PingFang SC',
+  'Heiti SC',
+  'Microsoft YaHei',
+  'sans-serif',
+];
+
 TextTheme _text(ColorScheme scheme) {
   const family = 'Inter';
-  TextStyle s(double size, FontWeight weight, double height, double tracking) {
+  TextStyle s(double size, FontWeight weight, double height, double tracking,
+      {bool tabular = false}) {
     return TextStyle(
       fontFamily: family,
+      fontFamilyFallback: kOrdnanceCjkFallback,
       fontSize: size,
       fontWeight: weight,
       height: height,
       letterSpacing: tracking,
       color: scheme.onSurface,
+      fontFeatures:
+          tabular ? const [FontFeature.tabularFigures()] : null,
     );
   }
 
   return TextTheme(
-    displaySmall: s(32, FontWeight.w600, 1.15, -0.6),
+    displaySmall: s(32, FontWeight.w600, 1.15, -0.6, tabular: true),
     headlineMedium: s(26, FontWeight.w600, 1.2, -0.4),
     titleLarge: s(20, FontWeight.w600, 1.25, -0.2),
     titleMedium: s(16, FontWeight.w600, 1.3, 0),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../design/ordnance_tokens.dart';
+import 'instrument.dart';
 
 /// The only button shapes in the app. Visuals come from the theme so a
 /// primary control looks the same on Range, a dialog, or a sheet.
@@ -62,7 +63,7 @@ class AppButton extends StatelessWidget {
                 label: Text(label),
               );
     }
-    return child;
+    return PressScale(child: child);
   }
 }
 

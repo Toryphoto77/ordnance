@@ -16,6 +16,7 @@ import 'screens/catalog_screen.dart';
 import 'screens/community_screen.dart';
 import 'screens/gun_cabinet_screen.dart';
 import 'screens/range_home_screen.dart';
+import 'widgets/instrument.dart';
 import 'widgets/page_transitions.dart';
 
 /// 主题选择状态：设置页写入，MaterialApp 监听切换。
@@ -164,19 +165,55 @@ class _FrostedNavBar extends StatelessWidget {
           ),
           child: SizedBox(
             height: 64,
-            child: Row(
-              children: [
-                for (var slot = 0; slot < _HomePageState._tabs.length; slot++)
-                  Expanded(
-                    child: _NavItem(
-                      icon: _HomePageState._tabs[slot].$1,
-                      activeIcon: _HomePageState._tabs[slot].$2,
-                      label: tr(_HomePageState._tabs[slot].$3),
-                      selected: index == slot,
-                      onTap: () => onTap(slot),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final count = _HomePageState._tabs.length;
+                final slot = constraints.maxWidth / count;
+                final motion = ordnanceMotionOn(context);
+                return Stack(
+                  children: [
+                    AnimatedPositioned(
+                      duration: motion
+                          ? const Duration(milliseconds: 280)
+                          : Duration.zero,
+                      curve: OrdnanceMotion.emphasized,
+                      left: index * slot + 6,
+                      width: slot - 12,
+                      top: 6,
+                      bottom: 6,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          color: scheme.primary.withValues(alpha: 0.16),
+                          border: Border.all(
+                            color: scheme.primary.withValues(alpha: 0.55),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: scheme.primary.withValues(alpha: 0.28),
+                              blurRadius: 14,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-              ],
+                    Row(
+                      children: [
+                        for (var i = 0; i < count; i++)
+                          Expanded(
+                            child: _NavItem(
+                              icon: _HomePageState._tabs[i].$1,
+                              activeIcon: _HomePageState._tabs[i].$2,
+                              label: tr(_HomePageState._tabs[i].$3),
+                              selected: index == i,
+                              onTap: () => onTap(i),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -211,40 +248,23 @@ class _NavItem extends StatelessWidget {
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: Center(
-          child: AnimatedContainer(
-            duration: OrdnanceMotion.press,
-            curve: OrdnanceMotion.enter,
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            decoration: BoxDecoration(
-              color: selected
-                  ? scheme.primary.withValues(alpha: 0.16)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: selected
-                    ? scheme.primary.withValues(alpha: 0.55)
-                    : Colors.transparent,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(selected ? activeIcon : icon, size: 18, color: color),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.fade,
+                softWrap: false,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontSize: 10,
+                      color: color,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    ),
               ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(selected ? activeIcon : icon, size: 18, color: color),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.fade,
-                  softWrap: false,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        fontSize: 10,
-                        color: color,
-                        fontWeight:
-                            selected ? FontWeight.w600 : FontWeight.w500,
-                      ),
-                ),
-              ],
-            ),
+            ],
           ),
         ),
       ),

@@ -72,6 +72,14 @@ void main() {
         messenger.setMockMethodCallHandler(
             MethodChannel(name), (call) async => null);
       }
+      final sample = Platform.environment['ORDNANCE_SAMPLE'] == '1';
+      messenger.setMockMethodCallHandler(const MethodChannel('gunsmap/prefs'),
+          (call) async {
+        if (!sample || call.method != 'getString') return null;
+        final key = (call.arguments as Map?)?['key'];
+        if (key == 'range_sessions_v1') return _sampleSessions();
+        return _samplePrefs[key];
+      });
       await tester.pumpWidget(MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: buildOrdnanceTheme(Brightness.light, defaultAccent),
@@ -80,16 +88,37 @@ void main() {
         home: entry.value(),
       ));
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 900));
       final boundary = tester.renderObject<RenderRepaintBoundary>(
           find.byType(RepaintBoundary).first);
       final image = boundary.toImageSync(pixelRatio: 1);
       final bytes = await tester.runAsync(
           () => image.toByteData(format: ui.ImageByteFormat.png));
-      File('$shots/${entry.key}.png')
+      final prefix = sample ? 'sample_' : '';
+      File('$shots/$prefix${entry.key}.png')
           .writeAsBytesSync(bytes!.buffer.asUint8List());
       image.dispose();
     }, timeout: const Timeout(Duration(seconds: 20)));
   }
+}
+
+/// Fixture rows for screenshot captures only. The app never ships these.
+final _samplePrefs = <String, String>{
+  'gun_profiles_v1':
+      '[{"gunName":"Sample rifle","nickname":"Sample","rounds":640,"maintEveryRounds":500,"maintEveryDays":90}]',
+  'ammo_inventory_v1':
+      '[{"caliber":"5.56","name":"Sample 55gr","quantity":180,"lowAt":40},{"caliber":"9mm","name":"Sample 115gr","quantity":36,"lowAt":50},{"caliber":".308","name":"Sample match","quantity":80,"lowAt":20}]',
+};
+
+String _sampleSessions() {
+  final now = DateTime.now();
+  int ms(int daysAgo) =>
+      now.subtract(Duration(days: daysAgo)).millisecondsSinceEpoch;
+  return '['
+      '{"id":"s1","dateMs":${ms(1)},"gunName":"Sample rifle","place":"Sample range","distance":"100","drill":"Slow fire","target":"Sample","rounds":20,"score":"98","ammoName":"Sample 55gr","lot":"S","notes":""},'
+      '{"id":"s2","dateMs":${ms(6)},"gunName":"Sample rifle","place":"Sample range","distance":"200","drill":"Slow fire","target":"Sample","rounds":40,"score":"95","ammoName":"Sample 55gr","lot":"S","notes":""},'
+      '{"id":"s3","dateMs":${ms(12)},"gunName":"Sample rifle","place":"Sample range","distance":"100","drill":"Rapid","target":"Sample","rounds":30,"score":"91","ammoName":"Sample 55gr","lot":"S","notes":""}'
+      ']';
 }
 
 File _materialIconsFile() {

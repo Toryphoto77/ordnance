@@ -21,7 +21,10 @@ import 'about_screen.dart';
 import 'theme_screen.dart';
 import 'app_log_screen.dart';
 import 'feedback_screen.dart';
-import '../design/ordnance_tokens.dart';
+import '../haptics.dart';
+import '../widgets/instrument.dart';
+import 'my_screen.dart';
+import 'unit_settings_screen.dart';
 
 /// 设置页：主题切换与关于信息。
 class SettingsScreen extends StatelessWidget {
@@ -39,27 +42,32 @@ class SettingsScreen extends StatelessWidget {
       appBar: SubPageAppBar(title: tr('settings_title')),
       body: ListView(
         padding: EdgeInsets.fromLTRB(
-            16, MediaQuery.of(context).padding.top + kToolbarHeight + 16, 16, 16),
+            16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 28),
         children: [
-          // 顶部：App 图标 + 名称 + 同色小药丸当前版本号。
-          Center(
-            child: Column(
+          HudPanel(
+            glow: true,
+            child: Row(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(14),
                   child: Image.asset('assets/images/app-icon.png',
-                      width: 72, height: 72, fit: BoxFit.cover),
+                      width: 52, height: 52, fit: BoxFit.cover),
                 ),
-                const SizedBox(height: 10),
-                Text('Ordnance',
-                    style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 4),
-                Text('Range · Armory · Ammunition · Directory',
-                    style: TextStyle(color: grey, fontSize: 12)),
-                const SizedBox(height: 8),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Ordnance',
+                          style: Theme.of(context).textTheme.titleLarge),
+                      Text('Range · Armory · Ammunition',
+                          style: TextStyle(color: grey, fontSize: 12)),
+                    ],
+                  ),
+                ),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.primary,
                     borderRadius: BorderRadius.circular(12),
@@ -68,141 +76,187 @@ class SettingsScreen extends StatelessWidget {
                       style: TextStyle(
                           color: Theme.of(context).colorScheme.onPrimary,
                           fontSize: 12,
-                          fontWeight: FontWeight.w600)),
+                          fontWeight: FontWeight.w600,
+                          fontFeatures: const [FontFeature.tabularFigures()])),
                 ),
-                const SizedBox(height: 6),
-                Text(tr('settings_engine_prefix') + 'Flutter 3.47.8',
-                    style: TextStyle(color: grey, fontSize: 12)),
               ],
             ),
           ),
-          const SizedBox(height: 24),
-          // 快捷操作：默认收起，只留一行入口，点开才展开四项，
-          // 免得顶部一大块面板抢眼；后台入口仍只对管理员/版主显示。
-          _QuickActionsCard(
-            onCheckUpdate: (ctx) => _checkUpdate(ctx),
-            onExportData: (ctx) => _exportData(ctx),
-          ),
-          ListTile(
-            leading: const Icon(Icons.bug_report_outlined, size: 22),
-            title: Text(tr('app_log_title')),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AppLogScreen()),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.move_to_inbox_outlined, size: 22),
-            title: Text(tr('settings_import_title')),
-            subtitle: Text(tr('settings_import_subtitle'),
-                style: TextStyle(color: grey, fontSize: 12)),
-            onTap: () => _importData(context),
-          ),
-          const SizedBox(height: 24),
-          ValueListenableBuilder<Color>(
-            valueListenable: accentNotifier,
-            builder: (_, accent, __) => ValueListenableBuilder<ThemeMode>(
-              valueListenable: themeModeNotifier,
-              builder: (_, mode, __) => ListTile(
-                leading: const Icon(Icons.palette_outlined, size: 22),
-                title: Text(tr('appearance')),
-                subtitle: Text(mode == ThemeMode.system
-                    ? tr('theme_system')
-                    : mode == ThemeMode.light
-                        ? tr('theme_light')
-                        : tr('theme_dark')),
-                trailing: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: accent,
-                    border: Border.all(
-                        color: Colors.grey.withValues(alpha: 0.4)),
+          const SizedBox(height: 18),
+          SettingsGroup(
+            title: tr('set_display'),
+            children: [
+              ValueListenableBuilder<Color>(
+                valueListenable: accentNotifier,
+                builder: (_, accent, __) => ValueListenableBuilder<ThemeMode>(
+                  valueListenable: themeModeNotifier,
+                  builder: (_, mode, __) => SettingsRow(
+                    icon: Icons.palette_outlined,
+                    title: tr('appearance'),
+                    value: mode == ThemeMode.system
+                        ? tr('theme_system')
+                        : mode == ThemeMode.light
+                            ? tr('theme_light')
+                            : tr('theme_dark'),
+                    trailing: Container(
+                      width: 18,
+                      height: 18,
+                      margin: const EdgeInsets.only(left: 8),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: accent,
+                        border: Border.all(
+                            color: Theme.of(context).colorScheme.outline),
+                      ),
+                    ),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ThemeScreen()),
+                    ),
                   ),
                 ),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ThemeScreen()),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
+                child: ValueListenableBuilder<String>(
+                  valueListenable: localeNotifier,
+                  builder: (_, locale, __) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(tr('language'),
+                          style: Theme.of(context).textTheme.titleSmall),
+                      const SizedBox(height: 8),
+                      SegmentedButton<String>(
+                        showSelectedIcon: false,
+                        segments: [
+                          for (final entry in localeNames.entries)
+                            ButtonSegment(
+                              value: entry.key,
+                              label: Text(
+                                entry.value,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ),
+                        ],
+                        selected: {locale},
+                        onSelectionChanged: (next) {
+                          if (next.isEmpty) return;
+                          localeNotifier.value = next.first;
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              const Icon(Icons.language_outlined, size: 22),
-              const SizedBox(width: 8),
-              Text(tr('language'),
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ValueListenableBuilder<String>(
-            valueListenable: localeNotifier,
-            builder: (_, locale, __) => RadioGroup<String>(
-              groupValue: locale,
-              onChanged: (v) => localeNotifier.value = v!,
-              child: Column(
-                children: [
-                  for (final entry in localeNames.entries)
-                    RadioListTile<String>(
-                      title: Text(entry.value),
-                      value: entry.key,
-                    ),
-                ],
+              ValueListenableBuilder<bool>(
+                valueListenable: hapticsEnabledNotifier,
+                builder: (_, enabled, __) => SettingsRow(
+                  icon: Icons.vibration_outlined,
+                  title: tr('haptics_title'),
+                  trailing: Switch(
+                    value: enabled,
+                    onChanged: (v) => hapticsEnabledNotifier.value = v,
+                  ),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              const Icon(Icons.info_outlined, size: 22),
-              const SizedBox(width: 8),
-              Text(tr('about'),
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
-          const SizedBox(height: 8),
-          ListTile(
-            leading: const Icon(Icons.apps_outlined, size: 22),
-            title: const Text("Ordnance"),
-            subtitle: Text('${tr('version_prefix')}v$appVersion${Platform.isIOS ? tr('version_suffix_ios') : tr('version_suffix')}'),
+          SettingsGroup(
+            title: tr('set_profile'),
+            children: [
+              SettingsRow(
+                icon: Icons.straighten_outlined,
+                title: tr('unit_settings_title'),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const UnitSettingsScreen()),
+                ),
+              ),
+              SettingsRow(
+                icon: Icons.person_outline,
+                title: tr('tab_mine'),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MyScreen()),
+                ),
+              ),
+            ],
           ),
-          ListTile(
-            leading: const Icon(Icons.feedback_outlined, size: 22),
-            title: Text(tr('feedback')),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const FeedbackScreen()),
-            ),
+          SettingsGroup(
+            title: tr('set_data'),
+            children: [
+              SettingsRow(
+                icon: Icons.file_upload_outlined,
+                title: tr('settings_export'),
+                onTap: () => _exportData(context),
+              ),
+              SettingsRow(
+                icon: Icons.move_to_inbox_outlined,
+                title: tr('settings_import_title'),
+                subtitle: tr('settings_import_subtitle'),
+                onTap: () => _importData(context),
+              ),
+              const _ClearCacheTile(),
+            ],
           ),
-          ListTile(
-            leading: const Icon(Icons.person_add_outlined, size: 22),
-            title: Text(tr('settings_invite')),
-            onTap: () => _showInviteDialog(context),
-          ),
-          ListTile(
-            leading: const Icon(Icons.code, size: 22),
-            title: Text(tr('about_github')),
-            subtitle: const Text('Toryphoto77/ordnance'),
-            onTap: () async {
-              final ok = await openSystemUrl(
-                  'https://github.com/Toryphoto77/ordnance');
-              if (!ok && context.mounted) {
-                showAppToast(context, tr('browser_open_failed'));
-              }
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.book_outlined, size: 22),
-            title: Text(tr('about_title')),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AboutScreen()),
-            ),
+          SettingsGroup(
+            title: tr('set_about'),
+            children: [
+              SettingsRow(
+                icon: Icons.system_update_alt,
+                title: tr('check_update'),
+                subtitle: Platform.isIOS ? tr('ios_update_title') : null,
+                onTap: () => _checkUpdate(context),
+              ),
+              SettingsRow(
+                icon: Icons.apps_outlined,
+                title: 'Ordnance',
+                value:
+                    '${tr('version_prefix')}v$appVersion${Platform.isIOS ? tr('version_suffix_ios') : tr('version_suffix')}',
+              ),
+              SettingsRow(
+                icon: Icons.feedback_outlined,
+                title: tr('feedback'),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const FeedbackScreen()),
+                ),
+              ),
+              SettingsRow(
+                icon: Icons.person_add_outlined,
+                title: tr('settings_invite'),
+                onTap: () => _showInviteDialog(context),
+              ),
+              SettingsRow(
+                icon: Icons.code,
+                title: tr('about_github'),
+                value: 'Toryphoto77/ordnance',
+                onTap: () async {
+                  final ok = await openSystemUrl(
+                      'https://github.com/Toryphoto77/ordnance');
+                  if (!ok && context.mounted) {
+                    showAppToast(context, tr('browser_open_failed'));
+                  }
+                },
+              ),
+              SettingsRow(
+                icon: Icons.book_outlined,
+                title: tr('about_title'),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AboutScreen()),
+                ),
+              ),
+              SettingsRow(
+                icon: Icons.bug_report_outlined,
+                title: tr('app_log_title'),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AppLogScreen()),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -764,83 +818,6 @@ class _DownloadDialogState extends State<_DownloadDialog> {
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 快捷操作卡片：默认收起只留一行入口，点开才展开四项。
-class _QuickActionsCard extends StatefulWidget {
-  final void Function(BuildContext context) onCheckUpdate;
-  final void Function(BuildContext context) onExportData;
-  const _QuickActionsCard(
-      {required this.onCheckUpdate, required this.onExportData});
-
-  @override
-  State<_QuickActionsCard> createState() => _QuickActionsCardState();
-}
-
-class _QuickActionsCardState extends State<_QuickActionsCard> {
-  var _expanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return Card(
-      color: dark ? const Color(0xFF0D0D0D) : const Color(0xFFF3E9D8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-            color: ordnanceSignal.withValues(alpha: 0.35)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: () => setState(() => _expanded = !_expanded),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              child: Row(
-                children: [
-                  const Icon(Icons.bolt_outlined,
-                      size: 22, color: ordnanceSignal),
-                  const SizedBox(width: 8),
-                  Text(tr('settings_quick'),
-                      style: TextStyle(
-                          fontSize: 17, fontWeight: FontWeight.bold)),
-                  const SizedBox(width: 6),
-                  if (localeNotifier.value == localeHans)
-                    const Text('Quick Actions',
-                        style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  const Spacer(),
-                  Icon(
-                      _expanded
-                          ? Icons.expand_less
-                          : Icons.expand_more,
-                      size: 22,
-                      color: Colors.grey),
-                ],
-              ),
-            ),
-          ),
-          if (_expanded) ...[
-            ListTile(
-              leading: const Icon(Icons.system_update_alt, size: 22),
-              title: Text(tr('check_update')),
-              subtitle: Platform.isIOS ? Text(tr('ios_update_title')) : null,
-              onTap: () => widget.onCheckUpdate(context),
-            ),
-            const _ClearCacheTile(),
-            ListTile(
-              leading: const Icon(Icons.file_download_outlined, size: 22),
-              title: Text(tr('settings_export')),
-              onTap: () => widget.onExportData(context),
-            ),
-
-            const SizedBox(height: 8),
-          ],
         ],
       ),
     );
