@@ -5,7 +5,15 @@ import 'package:flutter/services.dart';
 /// 与主题一样，仅本次打开期间生效，不做持久化。
 final ValueNotifier<bool> hapticsEnabledNotifier = ValueNotifier(true);
 
-/// 卡片/导航点击的轻震：开关关闭时不震。
+int _lastHapticMs = 0;
+
+/// Light tick for buttons, list rows, chips, and the nav bar.
+/// Debounced so a control that both splashes and calls this does not
+/// double-fire.
 void tapHaptic() {
-  if (hapticsEnabledNotifier.value) HapticFeedback.selectionClick();
+  if (!hapticsEnabledNotifier.value) return;
+  final now = DateTime.now().millisecondsSinceEpoch;
+  if (now - _lastHapticMs < 40) return;
+  _lastHapticMs = now;
+  HapticFeedback.selectionClick();
 }

@@ -7,6 +7,7 @@ import '../widgets/app_toast.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/glass_dialog.dart';
 import 'community_profile_screen.dart';
+import '../design/ordnance_tokens.dart';
 
 /// 私信：会话列表 + 对话页，只在本机账号之间流转（本机版）。
 /// 列表按 X 风格：顶部搜索框、头像 + 名字 + ID + 时间 + 一行摘要，行间细线。
@@ -467,7 +468,7 @@ class _CommunityDmThreadScreenState extends State<CommunityDmThreadScreen> {
                                   horizontal: 12, vertical: 8),
                               decoration: BoxDecoration(
                                 color: mine
-                                    ? const Color(0xFFE86A1C)
+                                    ? ordnanceSignal
                                     : grey.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.only(
                                   topLeft: const Radius.circular(18),
@@ -515,7 +516,7 @@ class _CommunityDmThreadScreenState extends State<CommunityDmThreadScreen> {
                       const SizedBox(width: 8),
                       Container(
                         decoration: const BoxDecoration(
-                          color: Color(0xFFE86A1C),
+                          color: ordnanceSignal,
                           shape: BoxShape.circle,
                         ),
                         child: IconButton(

@@ -12,6 +12,9 @@ import 'maintenance_screen.dart';
 import '../tool_logic.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/app_top_bar.dart';
+import '../widgets/instrument.dart';
+import '../widgets/ordnance_buttons.dart';
+import '../widgets/ordnance_sheet.dart';
 import 'community_range_screen.dart';
 import 'gun_picker_dialog.dart';
 import 'range_trip_screen.dart';
@@ -115,15 +118,17 @@ class _RangeHomeScreenState extends State<RangeHomeScreen> {
     var ammoName = _ammo.isEmpty ? '' : _ammo.first.name;
     final lot = TextEditingController(
         text: _ammo.isEmpty ? '' : (_ammo.first.lot.isEmpty ? _ammo.first.batchNo : _ammo.first.lot));
-    final saved = await showDialog<bool>(
-      context: context,
+    final saved = await showOrdnanceSheet<bool>(
+      context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setLocal) => AlertDialog(
-          title: Text(tr('range_log_session')),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+        builder: (ctx, setLocal) => SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(tr('range_log_session'),
+                  style: Theme.of(ctx).textTheme.titleLarge),
+              const SizedBox(height: 8),
                 DropdownButton<String>(
                   isExpanded: true,
                   value: gunName.isEmpty ? null : gunName,
@@ -210,19 +215,24 @@ class _RangeHomeScreenState extends State<RangeHomeScreen> {
                     controller: notes,
                     decoration:
                         InputDecoration(labelText: tr('range_field_notes'))),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    AppButton.text(
+                      label: tr('cancel'),
+                      onPressed: () => Navigator.pop(ctx, false),
+                    ),
+                    const Spacer(),
+                    AppButton.primary(
+                      label: tr('save'),
+                      onPressed: () => Navigator.pop(ctx, true),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: Text(tr('cancel'))),
-            TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(tr('save'))),
-          ],
         ),
-      ),
     );
     final fired = int.tryParse(rounds.text.trim()) ?? 0;
     final fields = (
@@ -305,88 +315,200 @@ class _RangeHomeScreenState extends State<RangeHomeScreen> {
     await _load();
   }
 
+  int get _monthRounds {
+    final now = DateTime.now();
+    var total = 0;
+    for (final s in _sessions) {
+      final d = DateTime.fromMillisecondsSinceEpoch(s.dateMs);
+      if (d.year == now.year && d.month == now.month) total += s.rounds;
+    }
+    return total;
+  }
+
+  List<RangeSession> get _recent {
+    final copy = [..._sessions]
+      ..sort((a, b) => b.dateMs.compareTo(a.dateMs));
+    return copy;
+  }
+
+  double _serviceFraction(GunProfile p) {
+    final interval = p.maintEveryRounds <= 0 ? 500 : p.maintEveryRounds;
+    final last = _lastSnapshot(p.gunName);
+    final since = last < 0 ? p.rounds : p.rounds - last;
+    if (interval <= 0) return 0;
+    return (since / interval).clamp(0, 1).toDouble();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final grey = Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF8A8578)
-        : const Color(0xFF9A917F);
+    final scheme = Theme.of(context).colorScheme;
     final due = _due;
     final low = _ammo.where((a) => a.isLow).toList();
+    final recent = _recent;
+    final last = recent.isEmpty ? null : recent.first;
+    final spark = recent.reversed.take(8).map((s) => s.rounds.toDouble()).toList();
+    var hottestT = 0.0;
+    for (final p in _profiles) {
+      final t = _serviceFraction(p);
+      if (t > hottestT) hottestT = t;
+    }
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: const OrdnanceAppBar(),
+      appBar: OrdnanceAppBar(
+        title: tr('range_home_title'),
+        showWeather: true,
+      ),
       body: ListView(
-        padding: EdgeInsets.fromLTRB(
-            16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 120),
+        padding: ordnanceListPadding(context, root: true, bottom: 128),
         children: [
-          Text(tr('range_home_title'),
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Text(tr('range_home_sub'),
-              style: TextStyle(color: grey, fontSize: 13)),
+          if (recent.isEmpty)
+            EmptyInstrument(
+              message: tr('range_empty'),
+              action: AppButton.primary(
+                label: tr('range_log_session'),
+                icon: Icons.add,
+                onPressed: _log,
+              ),
+            )
+          else
+            HudPanel(
+              glow: true,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ProgressRing(
+                    value: hottestT,
+                    center: '$_monthRounds',
+                    caption: tr('inst_this_month'),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Eyebrow(tr('range_recent')),
+                        const SizedBox(height: 4),
+                        Text(last!.gunName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleMedium),
+                        Text(
+                          '${last.place} · ${last.distance} · ${last.score}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 8),
+                        Sparkline(values: spark),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           const SizedBox(height: 12),
-          FilledButton.icon(
-            onPressed: _log,
-            icon: const Icon(Icons.add),
-            label: Text(tr('range_log_session')),
-          ),
+          if (recent.isNotEmpty)
+            AppButton.primary(
+              label: tr('range_log_session'),
+              icon: Icons.add,
+              onPressed: _log,
+            ),
           const SizedBox(height: 8),
-          OutlinedButton(
+          AppButton.secondary(
+            label: tr('range_trip_link'),
             onPressed: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const RangeTripScreen())),
-            child: Text(tr('range_trip_link')),
           ),
           if (due.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text(tr('range_due'),
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            for (final p in due)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(p.nickname.isEmpty ? p.gunName : p.nickname),
-                subtitle: Text('${p.rounds}'),
-                trailing: const Icon(Icons.build_outlined),
-                onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const MaintenanceScreen())),
+            Eyebrow(tr('range_due')),
+            const SizedBox(height: 8),
+            for (var i = 0; i < due.length; i++)
+              StaggerIn(
+                index: i,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: HudPanel(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 4),
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(due[i].nickname.isEmpty
+                          ? due[i].gunName
+                          : due[i].nickname),
+                      subtitle: Text('${due[i].rounds}'),
+                      trailing: Icon(Icons.build_outlined,
+                          color: scheme.primary),
+                      onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const MaintenanceScreen())),
+                    ),
+                  ),
+                ),
               ),
           ],
           if (low.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text(tr('range_low_ammo'),
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            for (final a in low)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(a.name),
-                subtitle: Text('${a.caliber} · ${a.quantity}'),
+            Eyebrow(tr('range_low_ammo')),
+            const SizedBox(height: 8),
+            HudPanel(
+              child: Column(
+                children: [
+                  for (final a in low)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(a.name),
+                      subtitle: Text('${a.caliber} · ${a.quantity}'),
+                    ),
+                ],
               ),
+            ),
           ],
           const SizedBox(height: 16),
           Row(
             children: [
-              Text(tr('range_recent'),
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const Spacer(),
-              TextButton(
+              Expanded(child: Eyebrow(tr('range_recent'))),
+              AppButton.text(
+                label: tr('range_progress'),
                 onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (_) => const CommunityRangeScreen())),
-                child: Text(tr('range_progress')),
               ),
             ],
           ),
-          if (_sessions.isEmpty)
-            Text(tr('range_empty'), style: TextStyle(color: grey))
-          else
-            for (final s in _sessions.take(20))
-              Card(
-                child: ListTile(
-                  title: Text(s.gunName),
-                  subtitle: Text(
-                      '${s.place} · ${s.distance} · ${s.drill}\n${s.target} · ${s.rounds} · ${s.score}'),
+          if (recent.isNotEmpty)
+            for (var i = 0; i < recent.take(12).length; i++)
+              StaggerIn(
+                index: i,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: HudPanel(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(recent[i].gunName,
+                            style: Theme.of(context).textTheme.titleSmall),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${recent[i].place} · ${recent[i].distance} · ${recent[i].drill}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        Text(
+                          '${recent[i].rounds} · ${recent[i].score}',
+                          style:
+                              Theme.of(context).textTheme.labelLarge?.copyWith(
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures()
+                                    ],
+                                  ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
         ],

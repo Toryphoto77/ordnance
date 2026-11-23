@@ -26,18 +26,12 @@ class GunListScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(categoryDisplay(category),
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold)),
-                Text(
-                    '${categoryDisplay(category)} · ${list.length}' + tr('gun_count_suffix'),
-                    style: const TextStyle(color: Colors.grey)),
-              ],
-            ),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+            child: Text(
+                '${list.length}' + tr('gun_count_suffix'),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    )),
           ),
           Expanded(
             child: ListView.builder(
@@ -66,10 +60,14 @@ class GunListScreen extends StatelessWidget {
                 title: Text(vendorDisplay(vendor),
                     style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text(modelsCountText(models.length),
-                    style: const TextStyle(color: Color(0xFF9A917F))),
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant)),
                 children: models
                     .map((g) => ListTile(
-                          title: Text(gunDisplayName(g)),
+                          title: Hero(
+                            tag: gunHeroTag(g),
+                            child: Text(gunDisplayName(g)),
+                          ),
                           subtitle: Text(
                               '${vendorDisplay(g.vendor)} · ${g.caliber} · ${actionDisplay(g.action)}'),
                           onTap: () {

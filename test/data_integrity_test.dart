@@ -49,11 +49,12 @@ void main() {
       expect(File('assets/images/app-icon.png').existsSync(), isTrue);
     });
 
-    test('Manrope 四个字重都在', () {
+    test('Inter four weights and the OFL license are bundled', () {
       for (final weight in ['Regular', 'Medium', 'SemiBold', 'Bold']) {
-        expect(File('assets/fonts/Manrope-$weight.ttf').existsSync(), isTrue,
-            reason: '缺少 Manrope-$weight.ttf');
+        expect(File('assets/fonts/Inter-$weight.ttf').existsSync(), isTrue,
+            reason: 'missing Inter-$weight.ttf');
       }
+      expect(File('assets/fonts/OFL.txt').existsSync(), isTrue);
     });
   });
 

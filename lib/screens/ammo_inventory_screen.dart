@@ -7,6 +7,7 @@ import '../widgets/app_top_bar.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/time_line_chart.dart';
 import 'reload_log_screen.dart';
+import '../design/ordnance_tokens.dart';
 
 /// 弹药库存：工具向，不用登录，纯本机记录。
 /// 经 gunsmap/prefs 存本机（key ammo_inventory_v1），重启不丢。
@@ -548,7 +549,7 @@ class _AmmoInventoryScreenState extends State<AmmoInventoryScreen> {
       byCal.putIfAbsent(p.caliber, () => {})[p.date] = p.price;
     }
     const palette = <int>[
-      0xFFE86A1C,
+      0xFFC6A36A,
       0xFF2F5DA8,
       0xFF3E7A4E,
       0xFF7A2E2E,
@@ -691,7 +692,7 @@ class _AmmoInventoryScreenState extends State<AmmoInventoryScreen> {
           Text(tr('ammo_total_prefix') + '$total' + tr('ammo_total_mid') + '${_items.length}' + tr('ammo_total_suffix'),
               style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFE86A1C),
+                  color: ordnanceSignal,
                   fontSize: 15)),
           if (lowCount > 0)
             Padding(
@@ -742,7 +743,7 @@ class _AmmoInventoryScreenState extends State<AmmoInventoryScreen> {
                   Text(tr('ammo_price_total') + ' $totalValue',
                       style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFFE86A1C))),
+                          color: ordnanceSignal)),
                 if (invCalibers.isEmpty)
                   Text(tr('ammo_price_none'),
                       style: TextStyle(color: Colors.grey)),
@@ -856,7 +857,7 @@ class _AmmoInventoryScreenState extends State<AmmoInventoryScreen> {
                 series: [
                   TimeSeries(
                       label: '',
-                      color: const Color(0xFFE86A1C),
+                      color: ordnanceSignal,
                       points: pts),
                 ],
                 unit: tr('ammo_chart_unit_rounds'),
@@ -991,11 +992,9 @@ class _AmmoInventoryScreenState extends State<AmmoInventoryScreen> {
               decoration: InputDecoration(labelText: tr('ammo_note_label'))),
           const SizedBox(height: 12),
           FilledButton(
-            style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFE86A1C)),
+
             onPressed: _add,
-            child: Text(tr('ammo_add_btn'),
-                style: TextStyle(color: Colors.white)),
+            child: Text(tr('ammo_add_btn')),
           ),
           const SizedBox(height: 20),
           if (_items.isEmpty)
@@ -1055,7 +1054,7 @@ class _AmmoInventoryScreenState extends State<AmmoInventoryScreen> {
                           Text(item.stockText,
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFFE86A1C))),
+                                  color: ordnanceSignal)),
                           if (item.isLow)
                             Text(tr('ammo_below_line_prefix') + '${item.lowAt}' + tr('ammo_below_line_suffix'),
                                 style: const TextStyle(

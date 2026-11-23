@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 /// - 强调色橙：只用于经验 / 勋章 / 未读，奖励感的唯一视觉出口；
 /// - 板块用文字和图标，不用品类配图。
 Color communitySecondary(bool dark) =>
-    dark ? const Color(0xFFB8B0A0) : const Color(0xFF6E6557);
+    dark ? const Color(0xFF9AA1AD) : const Color(0xFF5E6670);
 
-const communityAccent = Color(0xFFE86A1C);
+const communityAccent = Color(0xFFC6A36A);
 
 Color rarityColor(String rarity) {
   switch (rarity) {

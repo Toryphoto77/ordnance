@@ -101,7 +101,9 @@ flutter analyze || true
 # 停掉可能残留的旧参数 daemon，确保用新参数起 daemon
 (cd android && ./gradlew --stop >/dev/null 2>&1) || true
 # 不用 daemon：daemon 读不到项目里的代理/IPv4 参数会被沙箱拦截，--no-daemon 直接用带参数的客户端 JVM 构建
+python3 "$WORK/patch-android-config.py"
 flutter build apk --debug --no-android-gradle-daemon
-cp build/app/outputs/flutter-apk/app-debug.apk "$WORK/app-debug.apk"
-ls -la "$WORK/app-debug.apk"
+VERSION=$(sed -n 's/^version: *\([0-9][^+]*\).*/\1/p' pubspec.yaml)
+cp build/app/outputs/flutter-apk/app-debug.apk "$WORK/Ordnance-v${VERSION}-debug.apk"
+ls -la "$WORK/Ordnance-v${VERSION}-debug.apk"
 echo BUILD_DONE

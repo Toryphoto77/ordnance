@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../i18n.dart';
 import '../tools_units.dart';
+import '../design/ordnance_tokens.dart';
 
 /// 归零助手算完要记卡时带给数据本的值：距离一律是米，方向是
 /// 实际要拧的方向（向左/向右/向上/向下），没偏移的方向记不动、0 格。
@@ -165,7 +166,7 @@ class _ZeroAssistantCardState extends State<ZeroAssistantCard> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE86A1C).withValues(alpha: 0.08),
+                  color: ordnanceSignal.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Column(
@@ -245,7 +246,7 @@ class _ZeroAssistantCardState extends State<ZeroAssistantCard> {
                   (hDev > 0 ? dirLabel(hTurn) + tr('zero_turn_mid') + '$hRounded' + tr('zero_turn_suffix') : '') + (hDev > 0 && vDev > 0 ? tr('zero_turn_join') : '') + (vDev > 0 ? dirLabel(vTurn) + tr('zero_turn_mid') + '$vRounded' + tr('zero_turn_suffix') : '') + tr('zero_turn_unit_prefix') + (_clickUnit == '0.1 密位' ? tr('zero_mrad_unit') : _clickUnit) + tr('zero_turn_unit_suffix'),
                   style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFFE86A1C),
+                      color: ordnanceSignal,
                       fontSize: 15)),
               if (hDev > 0 && (hExact - hRounded).abs() > 0.05)
                 Text(

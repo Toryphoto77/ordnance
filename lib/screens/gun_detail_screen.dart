@@ -133,9 +133,14 @@ class _GunDetailScreenState extends State<GunDetailScreen> {
               ),
             ),
           const SizedBox(height: 12),
-          Text(gunDisplayName(gun),
-              style:
-                  const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          Hero(
+            tag: gunHeroTag(gun),
+            child: Material(
+              color: Colors.transparent,
+              child: Text(gunDisplayName(gun),
+                  style: Theme.of(context).textTheme.headlineMedium),
+            ),
+          ),
           Text('${vendorDisplay(gun.vendor)} · ${gun.caliber}',
               style: const TextStyle(color: Colors.grey, fontSize: 16)),
           Text(gun.name,

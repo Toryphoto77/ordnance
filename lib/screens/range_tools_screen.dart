@@ -6,6 +6,7 @@ import '../tools_units.dart';
 import '../widgets/app_top_bar.dart';
 import 'dope_screen.dart';
 import 'gun_picker_dialog.dart';
+import '../design/ordnance_tokens.dart';
 
 /// 靶场换算：只算你输入的数，不画弹道、不给装药建议。
 /// 公式（公开常用值）：
@@ -251,7 +252,7 @@ class _ResultLine extends StatelessWidget {
       child: Text(text,
           style: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: Color(0xFFE86A1C),
+              color: ordnanceSignal,
               fontSize: 15)),
     );
   }

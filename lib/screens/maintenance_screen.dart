@@ -384,11 +384,10 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
           ],
           const SizedBox(height: 12),
           FilledButton(
-            style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFE86A1C)),
+
             onPressed: _add,
             child:
-                Text(tr('maint_add_btn'), style: TextStyle(color: Colors.white)),
+                Text(tr('maint_add_btn')),
           ),
           const SizedBox(height: 20),
           Text(tr('maint_table_title'),

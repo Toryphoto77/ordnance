@@ -19,35 +19,23 @@ class GlassDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 30,
-              offset: const Offset(0, 12),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: scheme.outline),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(16),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-              decoration: BoxDecoration(
-                color: dark
-                    ? Colors.black.withValues(alpha: 0.72)
-                    : Colors.white.withValues(alpha: 0.92),
-                border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.18)),
-              ),
+              color: scheme.surfaceContainerHigh.withValues(alpha: 0.94),
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -57,12 +45,7 @@ class GlassDialog extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(title,
-                              style: TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                  color: dark
-                                      ? Colors.white
-                                      : const Color(0xFF2E2A24))),
+                              style: Theme.of(context).textTheme.titleLarge),
                         ),
                         InkWell(
                           borderRadius: BorderRadius.circular(14),
@@ -71,9 +54,7 @@ class GlassDialog extends StatelessWidget {
                             padding: const EdgeInsets.all(4),
                             child: Icon(Icons.close,
                                 size: 20,
-                                color: dark
-                                    ? Colors.white70
-                                    : Colors.black54),
+                                color: scheme.onSurfaceVariant),
                           ),
                         ),
                       ],
@@ -81,11 +62,7 @@ class GlassDialog extends StatelessWidget {
                     if (subtitle != null) ...[
                       const SizedBox(height: 4),
                       Text(subtitle!,
-                          style: TextStyle(
-                              color: dark
-                                  ? Colors.white70
-                                  : Colors.black54,
-                              fontSize: 12)),
+                          style: Theme.of(context).textTheme.bodySmall),
                     ],
                     const SizedBox(height: 16),
                     content,
@@ -121,10 +98,8 @@ Widget glassPrimaryButton(BuildContext context, String label,
   // 按钮会直接变灰禁用（等级/身份弹窗的“知道了”就是这么坏的）。
   // 现在默认就是关弹窗，popTrue 时带回 true。
   return FilledButton(
-    style: FilledButton.styleFrom(
-        backgroundColor: const Color(0xFFE86A1C)),
     onPressed: onPressed ??
         () => Navigator.of(context).pop(popTrue ? true : null),
-    child: Text(label, style: const TextStyle(color: Colors.white)),
+    child: Text(label),
   );
 }

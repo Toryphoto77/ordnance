@@ -5,6 +5,7 @@ import '../english_terms.dart';
 import '../models.dart';
 import '../widgets/app_top_bar.dart';
 import 'gun_picker_dialog.dart';
+import '../design/ordnance_tokens.dart';
 
 /// 两枪参数对比：只对照图鉴已收录的纸面参数，不做弹道推算。
 /// 初速与弹道系数未收录，所以不画弹道曲线——画了就是现编。
@@ -194,7 +195,7 @@ class _Row extends StatelessWidget {
     final valueStyle = TextStyle(
         fontSize: 14,
         fontWeight: diff ? FontWeight.bold : FontWeight.normal,
-        color: diff ? const Color(0xFFE86A1C) : null);
+        color: diff ? ordnanceSignal : null);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(

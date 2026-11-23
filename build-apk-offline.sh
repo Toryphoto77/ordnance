@@ -1,5 +1,5 @@
 #!/bin/bash
-# Gun's Map（枪械图鉴 App）完全离线 debug APK 编译。
+# Ordnance 完全离线 debug APK 编译。
 # 用法：bash build-apk-offline.sh
 #
 # 背景：沙箱在 TCP 层拦截 Gradle 的出站连接（Apache HttpClient），即使把
@@ -119,13 +119,13 @@ rm -rf "$BUILD_DIR/assets"
 cp -r "$WORK/assets" "$BUILD_DIR/assets"
 rm -rf "$BUILD_DIR/test"
 
-# ---- 改名：显示名 Gun's Map（内部包名 firearms_catalog 不动）----
+# ---- 改名：显示名 Ordnance（内部包名 firearms_catalog 不动）----
 # ---- 启动图标：核对 icon / roundIcon（模板缺 roundIcon 时补上）----
 python3 - <<'PYEOF'
 import re
 p = "/home/hatch/workspace/firearms-app-build/android/app/src/main/AndroidManifest.xml"
 s = open(p).read()
-s = re.sub(r'android:label="[^"]*"', 'android:label="Gun\'s Map"', s, count=1)
+s = re.sub(r'android:label="[^"]*"', 'android:label="Ordnance"', s)
 s = re.sub(r'android:icon="[^"]*"', 'android:icon="@mipmap/ic_launcher"', s, count=1)
 if 'android:roundIcon=' not in s:
     s = s.replace('android:icon="@mipmap/ic_launcher"',
@@ -241,6 +241,7 @@ mkdir -p "$GUH/init.d"
 printf 'gradle.startParameter.offline = true\n' > "$GUH/init.d/offline.gradle"
 trap 'rm -f "$GUH/init.d/offline.gradle"' EXIT
 flutter build apk --debug --no-android-gradle-daemon
-cp build/app/outputs/flutter-apk/app-debug.apk "$WORK/app-debug.apk"
-ls -la "$WORK/app-debug.apk"
+VERSION=$(sed -n 's/^version: *\([0-9][^+]*\).*/\1/p' pubspec.yaml)
+cp build/app/outputs/flutter-apk/app-debug.apk "$WORK/Ordnance-v${VERSION}-debug.apk"
+ls -la "$WORK/Ordnance-v${VERSION}-debug.apk"
 echo BUILD_DONE

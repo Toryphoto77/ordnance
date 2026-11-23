@@ -10,6 +10,7 @@ import 'community_dm_screen.dart';
 import 'community_profile_screen.dart';
 import 'community_range_screen.dart';
 import 'community_saved_screen.dart';
+import '../design/ordnance_tokens.dart';
 
 /// 我的 Tab：个人中心入口。登录后显示头像、等级铭牌与统计，
 /// 下分我的主页、私信、靶场成绩、设置；未登录时显示登录/注册。
@@ -24,17 +25,10 @@ class MyScreen extends StatelessWidget {
         final me = communityStore.current;
         return Scaffold(
           extendBodyBehindAppBar: true,
-          appBar: const OrdnanceAppBar(),
+          appBar: SubPageAppBar(title: tr('tab_mine')),
           body: ListView(
-            padding: EdgeInsets.fromLTRB(
-                16,
-                MediaQuery.of(context).padding.top + kToolbarHeight + 16,
-                16,
-                110),
+            padding: ordnanceListPadding(context, root: false, bottom: 32),
             children: [
-              Text(tr('tab_mine'),
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
               if (me == null)
                 Card(
                   child: Padding(
@@ -288,7 +282,7 @@ class _MenuTile extends StatelessWidget {
               if (badge > 0) ...[
                 Badge(
                   label: Text('$badge'),
-                  backgroundColor: const Color(0xFFE86A1C),
+                  backgroundColor: ordnanceSignal,
                 ),
                 const SizedBox(width: 8),
               ],

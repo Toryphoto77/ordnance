@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../i18n.dart';
+import '../design/ordnance_tokens.dart';
 
 /// 系统档位徽章：S/A/B/C/D 按档位着色；3 发以下显示“样本不足”
 /// 灰色片；无档（无散布）时不渲染。成绩卡片与公开动态卡片共用。
@@ -18,7 +19,7 @@ class ScoreGradeChip extends StatelessWidget {
       case 'S':
         return const Color(0xFFD4A017);
       case 'A':
-        return const Color(0xFFE86A1C);
+        return ordnanceSignal;
       case 'B':
         return const Color(0xFF2E7D32);
       case 'C':

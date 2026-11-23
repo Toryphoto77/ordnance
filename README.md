@@ -40,7 +40,7 @@ test/                       data, copy, and tool-flow tests
 
 ## Build
 
-The repository does not commit `android/`. The build scripts generate it, then apply `lib/`, `assets/`, and `app-icon/res/`.
+The repository does not commit `android/`. The build scripts generate it, then apply `lib/`, `assets/`, and `app-icon/res/`. `patch-android-config.py` sets the application id and points `android:label` at `@string/app_name` (`Ordnance`). Without that step the scaffold label `firearms_catalog` is what the installer and the launcher show. Release and local scripts copy the built APK to `Ordnance-vX.Y.Z.apk` (debug builds use `Ordnance-vX.Y.Z-debug.apk`).
 
 ```bash
 bash build-apk.sh
@@ -63,7 +63,7 @@ Key material stays out of the repository. CI signing uses repository secrets:
 
 Optional variable `ANDROID_CERT_SHA256` checks the certificate fingerprint during the release build.
 
-Current version is 3.0.1. `pubspec.yaml` and `lib/app_version.dart` stay in lockstep. A `v*` tag runs `.github/workflows/android-release.yml`.
+Current version is 3.0.2. `pubspec.yaml` and `lib/app_version.dart` stay in lockstep. A `v*` tag runs `.github/workflows/android-release.yml`.
 
 ## Tests
 

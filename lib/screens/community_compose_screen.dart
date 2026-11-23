@@ -6,7 +6,6 @@ import '../i18n.dart';
 import '../location_flow.dart';
 import '../weather_api.dart';
 import '../widgets/map_preview.dart';
-import '../widgets/liquid_glass_nav.dart';
 
 /// 发帖器（Threads 风格排版）：顶部左边取消、右边液态玻璃发布按钮；
 /// 下方头像 + 用户名一行，配大面积无边框纯文本输入框；附件行：
@@ -698,10 +697,7 @@ class _CommunityComposeScreenState extends State<CommunityComposeScreen> {
   }
 }
 
-/// 液态玻璃发布按钮：药丸形，底只用 [LiquidGlassBackdrop] 的折射
-/// （着色器不可用时自动退回毛玻璃），不设任何背景色与描边；
-/// 文字用主题前景色（白天近黑、夜晚近白）；内容为空时只把文字
-/// 降透明度，不换颜色。
+/// Publish control. Uses the shared primary button; disabled while empty.
 class _GlassPublishButton extends StatelessWidget {
   const _GlassPublishButton({required this.enabled, required this.onTap});
 
@@ -710,30 +706,9 @@ class _GlassPublishButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final fg = dark ? const Color(0xFFF5F0E6) : const Color(0xFF1E1B16);
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        // 发布按钮保持旧强度（tint 0.08 / blur 28），2.2.5 只加重底部导航。
-        child: LiquidGlassBackdrop(
-          radius: 18,
-          tint: 0.08,
-          fallbackSigma: 28,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Text(
-              tr('publish'),
-              style: TextStyle(
-                color: fg.withValues(alpha: enabled ? 1 : 0.4),
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-              ),
-            ),
-          ),
-        ),
-      ),
+    return FilledButton(
+      onPressed: enabled ? onTap : null,
+      child: Text(tr('publish')),
     );
   }
 }
