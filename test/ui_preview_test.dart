@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -28,11 +29,19 @@ void main() {
   }
 
   setUpAll(() async {
-    final loader = FontLoader('Inter');
+    // Widget tests do not load the engine icon font or pubspec fonts.
+    // Icons.* are MaterialIcons private-use codepoints, so without this
+    // file they paint as empty squares. The app itself includes the font
+    // via uses-material-design: true. Inter is the UI face.
+    final inter = FontLoader('Inter');
     for (final weight in ['Regular', 'Medium', 'SemiBold', 'Bold']) {
-      loader.addFont(rootBundle.load('assets/fonts/Inter-$weight.ttf'));
+      inter.addFont(rootBundle.load('assets/fonts/Inter-$weight.ttf'));
     }
-    await loader.load();
+    await inter.load();
+    await _loadFileFont(
+      'MaterialIcons',
+      _materialIconsFile(),
+    );
   });
 
   final cases = <String, Widget Function()>{
@@ -82,4 +91,24 @@ void main() {
       image.dispose();
     }, timeout: const Timeout(Duration(seconds: 20)));
   }
+}
+
+File _materialIconsFile() {
+  final root = Platform.environment['FLUTTER_ROOT'];
+  if (root == null || root.isEmpty) {
+    throw StateError('FLUTTER_ROOT is unset; cannot load MaterialIcons');
+  }
+  final file = File(
+      '$root/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf');
+  if (!file.existsSync()) {
+    throw StateError('MaterialIcons font missing at ${file.path}');
+  }
+  return file;
+}
+
+Future<void> _loadFileFont(String family, File file) async {
+  final bytes = await file.readAsBytes();
+  final data = ByteData.sublistView(Uint8List.fromList(bytes));
+  final loader = FontLoader(family)..addFont(Future<ByteData>.value(data));
+  await loader.load();
 }
