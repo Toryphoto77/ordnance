@@ -63,7 +63,7 @@ Key material stays out of the repository. CI signing uses repository secrets:
 
 Optional variable `ANDROID_CERT_SHA256` checks the certificate fingerprint during the release build.
 
-Current version is 3.0.1. `pubspec.yaml` and `lib/app_version.dart` stay in lockstep. A `v*` tag runs `.github/workflows/android-release.yml`.
+Current version is 3.0.2. `pubspec.yaml` and `lib/app_version.dart` stay in lockstep. A `v*` tag runs `.github/workflows/android-release.yml`.
 
 ## Tests
 
